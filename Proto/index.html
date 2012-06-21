@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="robots" content="index, follow"/>
+    <meta name="keywords" content="icon design, ios, retina, mac os x, osx, os x"/>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+    <title></title>
+
+    <link rel="stylesheet" href="css/fonts.css"/>
+    <link rel="stylesheet" href="css/main.css"/>
+    <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
+    
+	<script type="text/javascript">
+		function init () {
+			var myMap = new ymaps.Map('bigmap', {
+                center: [55.76, 37.64],
+                zoom: 6
+            });
+		}
+
+		ymaps.ready(init);
+    </script>
+</head>
+<body>
+	<div id="bigmap"></div>
+	
+    <div id="bottom">
+        <div id="bottombar">
+            <button id="orderwash">Записаться на мойку</button>
+        </div>
+    </div>
+
+    <div id="top">
+        <div id="topbar">
+            <img id="logo" src="img/logo.png" />
+        </div>
+    </div>
+</body>
+</html>
