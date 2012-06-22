@@ -24,18 +24,103 @@
                 center: [55.76, 37.64],
                 zoom: 6
             });
+
+            $("#orderwash").click(function(){
+                $("#bottombar").animate({"bottom": "-" + $("#bottombar").height() + "px", "opacity": "0.3"}, 1000);
+                // $("#bottombar .links")[0].fadeOut(1000);
+
+                $("#secondstep").animate({"bottom": "0px", "opacity":"1.0"}, 400);
+            });
+
+            
+
 		}
 
 		ymaps.ready(init);
+
+        $(document).ready(function(){
+            function centerLayouts() {
+                var windowWidth = $(document).width();
+                $('.hcenter').each(function(i,obj){$(obj).css({"left": (windowWidth - $(obj).width())/2});});
+            }
+            centerLayouts();
+            $(window).resize(centerLayouts);
+        });
     </script>
+
+    <style type="text/css">
+        /*#bottombar { display: none;}*/
+        #secondstep { opacity: 0.0;} </style>
 </head>
 <body>
 	<div id="bigmap"></div>
 	
     <div id="bottom">
-        <div id="bottombar">
+        <div id="bottombar" class="hcenter">
+            <div class="links">
+                <span class="copyright">&copy; Мойка инфо</span>
+                <ul>
+                    <li><a href="/o-proekte/">О проекте</a></li>
+                    <li><a href="/kontakty/">Контакты</a></li>
+                    <li><a href="/vakansii/">Вакансии</a></li>
+                    <li><a href="/reklama/">Реклама</a></li>
+                </ul>
+            </div>
             <button id="orderwash">Записаться на мойку</button>
         </div>
+
+        <form action="">
+            <div id="secondstep" class="hcenter">
+                <div class="form">
+                    <div class="inputs">
+
+                        <div class="datetime">
+                            <div class="countdowns">
+                                <div class="countdown"><div></div><span>5<em>Май</em></span></div>
+                                <div class="countdown"><div></div><span>22<em>Часы</em></span></div>
+                                <div class="countdown"><div></div><span>27<em>Минуты</em></span></div>
+                            </div>
+                            <button id="choosetime" class="disabled">Желаемое время</button>
+                        </div>
+
+                        <div class="requiredbubble">
+                            <p>&mdash; поля обязательны для заполнения</p>
+                        </div>
+                        <ul class="textfields">
+                            <li><label><input type="name" name="name" placeholder="Как вас зовут?" required="required" /></label></li>
+                            <li><label><input type="phone" name="phone" placeholder="Телефон" required="required" /></label></li>
+                            <li><label><input type="name" name="auto" placeholder="Марка автомобиля" required="required" /></label></li>
+                            <li><label><input type="email" name="mail" placeholder="E-mail" /></label></li>
+                        </ul>
+
+                        <p>
+                            Заполните поля и нажмите на кнопку <em>«подтвердить»</em>.<br/>
+                            Выберите тип автомобиля и тип мойки:<br/>
+                            Автомобиль:<br/>    
+                        </p>
+                        <ul class="ordertype">
+                            <li><label><input required="required" type="radio" name="ordertype" value="1"/>Кузов+ковр. 250&nbsp;Р.</label></li>
+                            <li><label><input required="required" type="radio" name="ordertype" value="17"/>Экспресс 150&nbsp;Р.</label></li>
+                            <li><label><input required="required" type="radio" name="ordertype" value="23"/>Люкс 350&nbsp;Р.</label></li>
+                        </ul>
+                        <hr/>
+                        <button type="submit" class="disabled" id="submit">Подтвердить</button>
+                    </div>
+                    <div class="links">
+                        <div class="bordercontainer">
+                        <span class="copyright">&copy; Мойка инфо</span>
+                        <ul>
+                            <li><a href="/o-proekte/">О проекте</a></li>
+                            <li><a href="/kontakty/">Контакты</a></li>
+                            <li><a href="/vakansii/">Вакансии</a></li>
+                            <li><a href="/reklama/">Реклама</a></li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+                <!---->
+            </div>
+        </form>
     </div>
 
     <div id="top">
