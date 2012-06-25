@@ -20,8 +20,6 @@
     
 	<script type="text/javascript">
         function showPopup(element, closeHandler) {
-            console.log($(window).height());
-            console.log($(element).find('.popupcontent').height());
             $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
             $(element).find('.popupcontent').css('top', ($(window).height()-270)/2 + 'px');
             beforeshowtop = $('#top').css('top');
@@ -55,8 +53,6 @@
             $("#choosetime").click(function() {
                 showPopup($("#choosetimepopup"));
             });
-
-            showPopup($("#choosetimepopup"));
 		}
 
 		ymaps.ready(init);
