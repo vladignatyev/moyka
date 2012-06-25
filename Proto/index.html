@@ -19,6 +19,28 @@
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
     
 	<script type="text/javascript">
+        function showPopup(element, closeHandler) {
+            console.log($(window).height());
+            console.log($(element).find('.popupcontent').height());
+            $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
+            $(element).find('.popupcontent').css('top', ($(window).height()-270)/2 + 'px');
+            beforeshowtop = $('#top').css('top');
+            beforeshowbottom = $('#bottom').css('bottom');
+            $('#top').animate({'top': '-'+($("#top").height()+20)+'px'}, "fast");
+
+            $('#bottom').animate({'bottom': '-400px'}, "fast", function(){
+                $(element).fadeIn('fast');
+                var shader = $(element).find('.shader')[0];
+                $(shader).bind('click',function(){
+                    if (!closeHandler || (closeHandler && !closeHandler(element)))
+                    {
+                        $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
+                        $('#bottom').animate({'bottom': '0'}, "fast");});
+                    }
+                    $(shader).unbind('click');
+                });
+            });
+        }
 		function init () {
 			var myMap = new ymaps.Map('bigmap', {
                 center: [55.76, 37.64],
@@ -27,13 +49,14 @@
 
             $("#orderwash").click(function(){
                 $("#bottombar").animate({"bottom": "-" + $("#bottombar").height() + "px", "opacity": "0.3"}, 1000);
-                // $("#bottombar .links")[0].fadeOut(1000);
-
                 $("#secondstep").animate({"bottom": "0px", "opacity":"1.0"}, 400);
             });
 
-            
+            $("#choosetime").click(function() {
+                showPopup($("#choosetimepopup"));
+            });
 
+            showPopup($("#choosetimepopup"));
 		}
 
 		ymaps.ready(init);
@@ -50,6 +73,7 @@
 
     <style type="text/css">
         /*#bottombar { display: none;}*/
+        #choosetimepopup { display: none; z-index:10;}
         #secondstep { opacity: 0.0;} </style>
 </head>
 <body>
@@ -80,7 +104,7 @@
                                 <div class="countdown"><div></div><span>22<em>Часы</em></span></div>
                                 <div class="countdown"><div></div><span>27<em>Минуты</em></span></div>
                             </div>
-                            <button id="choosetime" class="disabled">Желаемое время</button>
+                            <button type="button" id="choosetime" class="">Желаемое время</button>
                         </div>
 
                         <div class="requiredbubble">
@@ -126,6 +150,67 @@
     <div id="top">
         <div id="topbar">
             <img id="logo" src="img/logo.png" />
+        </div>
+    </div>
+
+    <div id="choosetimepopup">
+        <div class="shader"></div>
+        <div class="popupcontent">
+            <div class="inner">
+                <div class="leftsidebar">
+                    <h5>Введите желаемое время</h5>
+                    <div>
+                        <input required="required" class="number" value="21"></input>
+                        <input required="required" class="number" value="45"></input>
+                    </div>
+                    <div>
+                        <label><input type="radio" class="radio" value="today" name="todayortomorrow" />сегодня</label>
+                        <label><input type="radio" class="radio" value="tommorow" name="todayortomorrow" />завтра</label>
+                    </div>
+                </div>
+                <div class="rightsidebar">
+                    <h5>Свободная мойка</h5>
+                    <ul id="freewashings">
+                        <li>
+                            <a href="#">Авто спа</a><br/>
+                            <em>ул. Льва Толстого, д. 32б</em>
+                        </li>
+                        <li>
+                            <a href="#">Ланоил</a><br/>
+                            <em>ул. Революционная, д. 82</em>
+                        </li>
+                        <li class="selected">
+                            <a href="#">Флагман</a><br/>
+                            <em>ул. Ботаническая, д. 20 к. 1</em>
+                        </li>
+                        <li>
+                            <a href="#">Соната</a><br/>
+                            <em>ул. Дзержинского, д. 25а</em>
+                        </li>
+                        <li>
+                            <a href="#">Авто спа</a><br/>
+                            <em>ул. Льва Толстого, д. 32б</em>
+                        </li>
+                        <li>
+                            <a href="#">Ланоил</a><br/>
+                            <em>ул. Революционная, д. 82</em>
+                        </li>
+                        <li>
+                            <a href="#">Флагман</a><br/>
+                            <em>ул. Ботаническая, д. 20 к. 1</em>
+                        </li>
+                        <li>
+                            <a href="#">Соната</a><br/>
+                            <em>ул. Дзержинского, д. 25а</em>
+                        </li>
+                    </ul>
+                    <div class="popupbuttons">
+                        <button id="" class="okbutton">ОК</button>
+                        <button id="" class="cancelbutton">Отменить</button>
+
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
