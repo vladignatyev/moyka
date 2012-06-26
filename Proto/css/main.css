@@ -139,16 +139,16 @@ button.disabled {
 
 #submit { float:right; margin-right: 162px; }
 
-#choosetimepopup {
+.popup {
 }
 
-#choosetimepopup .shader {
+.popup .shader {
 	position:absolute; width:100%; height: 100%; background: #262729; opacity:0.57; z-index:11; 
 }
 
-#choosetimepopup .popupcontent {
-	position:absolute; z-index:12;background:#fafafa; border-radius:4px; padding: 18px;
-	width:500px;
+.popup .popupcontent {
+	position:absolute; z-index:12;background:#fafafa; border-radius:6px; padding: 18px;
+	width:464px;
 	box-shadow:0px 1px 2px #232526;
 }
 
@@ -166,7 +166,7 @@ button.disabled {
 	color:#262729;
 }
 
-#choosetimepopup .leftsidebar input.number {
+.popup .leftsidebar input.number {
 	width:50px;
 	height:70px; 
 	font-size:36px;
@@ -179,35 +179,36 @@ button.disabled {
 	border-bottom:1px solid #fff;
 }
 
-#choosetimepopup .leftsidebar label { display: block; margin-left:-2px; padding: 0 0 8px 0; color: #535a68; font-size:14px; cursor: pointer;}
-#choosetimepopup .leftsidebar label input { margin-right:8px; }
-#choosetimepopup .rightsidebar h5 {
+.todaytomorrowselector label { display: block; margin-left:-2px; padding: 0 0 8px 0; color: #535a68; font-size:14px; cursor: pointer;}
+.todaytomorrowselector label input { margin-right:8px; }
+
+#choosetimepopup .rightsidebar h4 {
 	padding:0 0 10px 0; margin: 0;
 	font-size:14px;
 	color:#262729;
 }
 
-#choosetimepopup .leftsidebar {
+.popup .leftsidebar {
 	float: left;
 	width:133px;
 }
 
-#choosetimepopup .rightsidebar {
-	margin-left:150px;
+.popup .rightsidebar {
+	margin-left:140px;
 }
 
 
-#choosetimepopup .popupbuttons button { 
+.popup .popupbuttons button { 
 	float:right;
 	margin-left:20px;
 	margin-top:10px;
 }
 
-#choosetimepopup .popupbuttons .okbutton {
+.popup .popupbuttons .okbutton {
 	width: 50px;
 }
 
-#choosetimepopup .popupbuttons .cancelbutton {
+.popup .popupbuttons .cancelbutton {
 	background-color: #910a0a;
   	background-repeat: repeat-x;
   	border-bottom: 1px solid #490000;
@@ -219,7 +220,25 @@ button.disabled {
   	background: -o-linear-gradient(top, #c51616, #6d0101);/* Opera 11.10+ */
 }
 
-#choosetimepopup .popupbuttons .cancelbutton:hover {
+.popup .popupbuttons .cancelbutton:hover {
 	background: #910a0a;
 }
+
+#choosebywashing h5 { color: #0165d5; font-size:18px; padding:10px 0 0 0; margin:0; }
+#choosebywashing h6 { color: #0165d5; font-size:14px; font-style:italic; padding:0; margin:0; font-weight:lighter;}
+
+#choosebywashing .leftsidebar, #choosebywashing .rightsidebar { margin-top: 15px;}
+
+#timeselection { list-style-type:none; padding:0; margin:0; overflow: hidden;}
+#timeselection li { display: block; float:left; height:30px; width:80px;}
+#timeselection li a { text-align:right; font-size:14px; color: #037500; text-decoration:none; border-bottom:1px dotted #037500; }
+#timeselection li a.disabled { font-size:14px; color:#9d0c0c; border:0; font-weight:bolder; }
+
+
+
+
+
+
+
+
 

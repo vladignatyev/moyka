@@ -53,6 +53,8 @@
             $("#choosetime").click(function() {
                 showPopup($("#choosetimepopup"));
             });
+
+            showPopup($("#choosebywashing"));
 		}
 
 		ymaps.ready(init);
@@ -149,17 +151,59 @@
         </div>
     </div>
 
-    <div id="choosetimepopup">
+    <div id="choosebywashing" class="popup">
+        <div class="shader"></div>
+        <div class="popupcontent">
+            <div class="inner">
+                    <h5>Флагман</h5>
+                    <h6>ул. Ботаническая, д. 20 корп. 1</h6>
+
+                <div class="leftsidebar">
+                    <div class="todaytomorrowselector">
+                        <label><input type="radio" class="radio" value="today" name="todayortomorrow" />сегодня</label>
+                        <label><input type="radio" class="radio" value="tommorow" name="todayortomorrow" />завтра</label>
+                    </div>
+                </div>
+                <div class="rightsidebar">
+                    <ul id="timeselection">
+                        <li><a class="disabled" href="#">08:00</a></li>
+                        <li><a class="disabled" href="#">09:00</a></li>
+                        <li><a class="disabled" href="#">10:00</a></li>
+                        <li><a class="disabled" href="#">11:00</a></li>
+                        <li><a class="disabled" href="#">12:00</a></li>
+                        <li><a href="#">13:00</a></li>
+                        <li><a href="#">14:00</a></li>
+                        <li><a class="disabled" href="#">15:00</a></li>
+                        <li><a href="#">16:00</a></li>
+                        <li><a class="disabled" href="#">17:00</a></li>
+                        <li><a href="#">18:00</a></li>
+                        <li><a href="#">19:00</a></li>
+                        <li><a href="#">20:00</a></li>
+                        <li><a href="#">21:00</a></li>
+                        <li><a href="#">22:00</a></li>
+                        <li><a href="#">23:00</a></li>
+                        <li><a href="#">00:00</a></li>
+                    </ul>
+                    <div class="popupbuttons">
+                        <button class="okbutton">ОК</button>
+                        <button class="cancelbutton">Отменить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="choosetimepopup" class="popup">
         <div class="shader"></div>
         <div class="popupcontent">
             <div class="inner">
                 <div class="leftsidebar">
-                    <h5>Введите желаемое время</h5>
+                    <h4>Введите желаемое время</h4>
                     <div>
                         <input required="required" class="number" value="21"></input>
                         <input required="required" class="number" value="45"></input>
                     </div>
-                    <div>
+                    <div class="todaytomorrowselector">
                         <label><input type="radio" class="radio" value="today" name="todayortomorrow" />сегодня</label>
                         <label><input type="radio" class="radio" value="tommorow" name="todayortomorrow" />завтра</label>
                     </div>
@@ -201,9 +245,8 @@
                         </li>
                     </ul>
                     <div class="popupbuttons">
-                        <button id="" class="okbutton">ОК</button>
-                        <button id="" class="cancelbutton">Отменить</button>
-
+                        <button class="okbutton">ОК</button>
+                        <button class="cancelbutton">Отменить</button>
                     </div>
                 </div>
             </div>
