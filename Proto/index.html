@@ -29,14 +29,20 @@
             $('#bottom').animate({'bottom': '-400px'}, "fast", function(){
                 $(element).fadeIn('fast');
                 var shader = $(element).find('.shader')[0];
-                $(shader).bind('click',function(){
-                    if (!closeHandler || (closeHandler && !closeHandler(element)))
+
+                function close(result){
+                    if (!closeHandler || (closeHandler && !closeHandler(element, result)))
                     {
                         $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
                         $('#bottom').animate({'bottom': '0'}, "fast");});
                     }
                     $(shader).unbind('click');
-                });
+                }
+
+                $(shader).add('.cancelbutton').bind('click', close.bind('cancel'));
+                $(".okbutton").bind('click', close.bind('ok'));
+                // $(".cancelbutton").bind('click', close.bind('cancel'));
+                
             });
         }
 		function init () {
@@ -54,7 +60,14 @@
                 showPopup($("#choosetimepopup"));
             });
 
-            showPopup($("#choosebywashing"));
+            $("#washingslist a").each(function(i,obj){
+                $(obj).click(function(){
+                    showPopup($("#choosebywashing"), function(){$("#washingslist").show();}); 
+                    $("#washingslist").hide(); 
+                })
+            });
+
+            // showPopup($("#choosebywashing"));
             // showPopup($("#choosetimepopup"));
 		}
 
@@ -148,7 +161,45 @@
 
     <div id="top">
         <div id="topbar">
+            <ul class="menu">
+                <li href="#" class="last"><b>Вход для партнеров</b></li>
+                <li href="#" id="washingslist"><b>Список моек &darr;</b>
+                    <div class="submenu">
+                        <a href="#">Ланоил</a>
+                        <a href="#">Флагман</a>
+                        <a href="#">Соната</a>
+                        <a href="#">Аврора</a>
+                        <a href="#">Восточный экспресс</a>
+                        <a href="#">Авто спа</a>
+
+                        <a href="#">Ланоил</a>
+                        <a href="#">Флагман</a>
+                        <a href="#">Соната</a>
+                        <a href="#">Аврора</a>
+                        <a href="#">Восточный экспресс</a>
+                        <a href="#">Авто спа</a>
+
+
+                        <a href="#">Ланоил</a>
+                        <a href="#">Флагман</a>
+                        <a href="#">Соната</a>
+                        <a href="#">Аврора</a>
+                        <a href="#">Восточный экспресс</a>
+                        <a href="#">Авто спа</a>
+
+
+                        <a href="#">Ланоил</a>
+                        <a href="#">Флагман</a>
+                        <a href="#">Соната</a>
+                        <a href="#">Аврора</a>
+                        <a href="#">Восточный экспресс</a>
+                        <a href="#">Авто спа</a>
+                    </div>
+                </li>
+                
+            </ul>
             <img id="logo" src="img/logo.png" />
+            
         </div>
     </div>
 

@@ -6,7 +6,7 @@ body { margin: 0; padding: 0;
 /* main screen layout */
 #bigmap { position: absolute; z-index:0; width: 100%; height: 100%;}
 
-#top { position:absolute; z-index:1; top:0; width:100%;}
+#top { position:absolute; top:0; width:100%;}
 #topbar { width:712px; height:49px;  margin:-5px auto auto auto;
 	border-radius: 5px;
 	background:#0c99db;
@@ -15,6 +15,7 @@ body { margin: 0; padding: 0;
 	-webkit-box-shadow: 0px 3px 3px rgba(0,0,0,0.4);
 	-moz-box-shadow: 0px 3px 3px rgba(0,0,0,0.4);
 	box-shadow: 0px 0px 3px rgba(0,0,1,0.8);
+
  }
 
  #logo { margin:11px 0 0 15px;}
@@ -234,11 +235,42 @@ button.disabled {
 #timeselection li a { text-align:right; font-size:14px; color: #037500; text-decoration:none; border-bottom:1px dotted #037500; }
 #timeselection li a.disabled { font-size:14px; color:#9d0c0c; border:0; font-weight:bolder; }
 
+.menu { padding:0; margin:0; list-style-type:none; }
+.menu>li { display: block; float: right; border-left:1px solid #1173cb; border-right: 1px solid #0b91da; height:50px; text-decoration:none;}
+.menu>li:hover {
+  	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1c85c6), to(#1570c0));/* Safari 4-5, Chrome 1-9 */
+  	background: -webkit-linear-gradient(top, #1c85c6, #1570c0);/* Safari 5.1, Chrome 10+ */
+  	background: -moz-linear-gradient(top, #1c85c6, #1570c0);/* Firefox 3.6+ */
+  	background: -ms-linear-gradient(top, #1c85c6, #1570c0);/* IE 10 */
+  	background: -o-linear-gradient(top, #1c85c6, #1570c0);/* Opera 11.10+ */
+  	box-shadow: inset 0px 0px 14px rgba(0,0,0,0.3);
+  }
 
+.menu .submenu { position: absolute; display: none;}
+.menu .submenu a { display: block; color: #0165d5; font-size: 14px; margin:16px;}
+.menu .submenu a:hover { color: #024086;}
 
+li:hover .submenu {
+	margin-top:1px;
+	display: block!important;
+	z-index:20;
+	background: #fcfcfd;
+	box-shadow:1px 0px 10px rgba(0,0,0,0.8);
+	width: 210px;
+	height:500px;
+	overflow: scroll;
+	border-radius:4px;
+}
 
+.menu>li:hover>b {
+	padding-top:21px;
 
+}
 
+.menu>li>b { font-weight:normal; border-left: 1px solid #1daae5; height:29px; padding:20px 20px 0; margin: 0; 
+	font-size:14px; color: #deeef6; text-shadow: 0px 1px 2px #000; text-decoration:none; display: block; cursor: pointer;}
 
+.menu>li.last { border-right:none!important; }
+.menu>li.last>b { border-right:none!important; padding:20px 24px 0 20px; }
 
 
