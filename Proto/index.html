@@ -11,6 +11,7 @@
 
     <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="js/test_data2.js"></script>
 
     <title></title>
 
@@ -41,15 +42,16 @@
 
                 $(shader).add('.cancelbutton').bind('click', close.bind('cancel'));
                 $(".okbutton").bind('click', close.bind('ok'));
-                // $(".cancelbutton").bind('click', close.bind('cancel'));
-                
             });
         }
 		function init () {
 			var myMap = new ymaps.Map('bigmap', {
-                center: [55.76, 37.64],
-                zoom: 6
+                center: [53.511311, 49.418084],
+                zoom: 12,
+                behaviors: ['default', 'scrollZoom']
             });
+
+            myMap.controls.add('zoomControl', {right: '40px', top: '5px'});
 
             $("#orderwash").click(function(){
                 $("#bottombar").animate({"bottom": "-" + $("#bottombar").height() + "px", "opacity": "0.3"}, 1000);
@@ -67,20 +69,59 @@
                 })
             });
 
-            // showPopup($("#choosebywashing"));
-            // showPopup($("#choosetimepopup"));
+            // var properties = {
+            //     balloonContent: 'Hello Yandex!',
+            //     hintContent: "Метка",
+            //     iconContent: "1"
+            // },
+            // options = { balloonCloseButton: true },
+            // placemark = new ymaps.Placemark([48, 40], properties, options);
+
+            // myMap.geoObjects.add(placemark);
+
+            var washings = parseTestData();
+
+            for (var i in washings) {
+                var washing = washings[i];
+
+                myMap.geoObjects.add(new ymaps.Placemark([washing.geo[1], washing.geo[0]], {
+                    balloonContent: ["<h6>",washing.name,"</h6>","<p class='address'>",washing.address,"</p>"].join(''),
+                    hintContent: washing.name,
+                    iconContent: ""
+                }, { balloonCloseButton: true}));
+            }
 		}
 
-		ymaps.ready(init);
-
-        $(document).ready(function(){
+        function initLayout() {
             function centerLayouts() {
                 var windowWidth = $(document).width();
                 $('.hcenter').each(function(i,obj){$(obj).css({"left": (windowWidth - $(obj).width())/2});});
             }
             centerLayouts();
             $(window).resize(centerLayouts);
-        });
+        }
+
+        String.prototype.capitalize = function() {
+            return this.charAt(0).toUpperCase() + this.slice(1);
+        }
+
+        function parseTestData() {
+            var list = [];
+            for (var i in test_data.features) {
+                var feature = test_data.features[i];
+                console.log(feature);
+                var address = feature.properties.description;
+                var name = feature.properties.name.toLowerCase().capitalize();
+                // var phones = feature.properties.CompanyMetaData.Phones.concat();
+                var geo = feature.properties.boundedBy[0];
+                list.push({"address":address, "name":name,/* "phones":phones, */"geo": geo});
+            }
+            return list;
+        }
+
+
+		ymaps.ready(init);
+        $(document).ready(initLayout);
     </script>
 
     <style type="text/css">
