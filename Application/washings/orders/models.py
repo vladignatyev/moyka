@@ -41,6 +41,7 @@ class Order(models.Model):
 	email = models.EmailField(blank=True, verbose_name=u'Электронная почта клиента')
 	cancelled = models.BooleanField(default=False, verbose_name=u'Заказ отменен?')
 	added_date = models.DateTimeField(verbose_name=u'Точная дата и время создания заказа', editable=False, auto_now=True)
+	csrfmiddlewaretoken = models.CharField(max_length=255, editable=False)
 
 	def from_dict(data_dict):
 		self.washing = Washing.objects.all(pk=data_dict['washing_id'])[0]

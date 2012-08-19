@@ -3,6 +3,7 @@ from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import views as auth_views
 from django.template import RequestContext
 from django.http import Http404
+# from django.core.exceptions import DoesNotExist
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -98,7 +99,7 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 
 
 import copy
-# @transaction.commit_on_success
+@transaction.commit_manually
 def add_order(request, default_method='POST'):
 	if request.method == default_method:
 		washing = None
@@ -108,7 +109,20 @@ def add_order(request, default_method='POST'):
 			washing = Washing.objects.get(pk=washing_id)
 		except ValueError:
 			print u"unable to find such washing: %s" % pk
+			transaction.rollback()
 			raise Http404
+
+		try:
+			unique_order_test = Order.objects.filter(csrfmiddlewaretoken=request.REQUEST['csrfmiddlewaretoken'])
+			if len(list(unique_order_test)):
+				print u"Already created!"
+				return orders.JSONResponse({'error': 'alreadycreated', 'details':unique_order_test[0].id}) # occupied :(
+		except Order.DoesNotExist:
+			pass
+		except:
+			print u"Already created!"
+			raise Http404	
+
 
 		if not re.match(r'^\d\d:\d\d$', request.REQUEST['date_time']):
 			print "malware time"
@@ -140,6 +154,7 @@ def add_order(request, default_method='POST'):
 
 		if not timegrid_matches:
 			print "time doesn't match timegrid"
+			transaction.rollback()
 			raise Http404
 
 		# test if time has already occupied
@@ -165,8 +180,11 @@ def add_order(request, default_method='POST'):
 						TIMEDIFF(TIME('{date_time_str}'), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)))
 		""".format(washing_id=washing.id,
 			date_time_str=date_time_str)
+
+		print query
 		occupied_orders = Order.objects.raw(query)
 		if len(list(occupied_orders)) > 0:
+			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
 
 		request_data = {
@@ -184,8 +202,11 @@ def add_order(request, default_method='POST'):
 		if not f.is_valid():
 			print "provided form fields wasn't valid"
 			print f.errors
+			transaction.rollback()
 			raise Http404
 		new_order = f.save(commit=False)
+
+
 
 		post_number_query = """
 		SELECT o.*
@@ -212,13 +233,19 @@ def add_order(request, default_method='POST'):
 		if not len(list(orders_by_time)):
 			new_order.washing_post_number = 1
 		else:
-			if orders_by_time[0].washing_post_number + 1 <= washing.washing_posts_count:
-				new_order.washing_post_number = orders_by_time[0].washing_post_number + 1
-			else:
-				return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
+			for order_by_time in orders_by_time:
+				if order_by_time.washing_post_number + 1 <= washing.washing_posts_count:
+					new_order.washing_post_number = order_by_time.washing_post_number + 1
+					break
+				else:
+					transaction.rollback()
+					return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
+				
 		new_order.save()
+		transaction.commit()
 		return orders.JSONResponse({'new_order': new_order.id})
 	else:
+		transaction.rollback()
 		raise Http404
 
 def get_user_order_data(request):
