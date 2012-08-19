@@ -50,7 +50,6 @@
             });
         }
 		function init () {
-            //todo: add real center from database
 			mapView = new ymaps.Map('bigmap', {
                 center: [{{ MAP_CENTER_LAT|floatformat:6 }}, {{ MAP_CENTER_LON|floatformat:6 }}],
                 zoom: 12,
@@ -93,20 +92,43 @@
             for (var i in viewModel) {
                 var washing = viewModel[i];
 
-                mapView.geoObjects.add(new ymaps.Placemark([washing.geo[1], washing.geo[0]], {
-                    balloonContent: ["<h2>",washing.name,"</h2>",
-                    "<p class='description'>",washing.description,"</p>",
-                    "<p class='address'>",washing.address,"</p>",
-                    "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",
-                    ].join(''),
-                    hintContent: ['<b>', washing.name, "</b><br/>", formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join(''),
-                    iconContent: ""
-                }, { balloonCloseButton: true}));
+                mapView.geoObjects.add(
+                    new ymaps.Placemark(
+                        [washing.geo[1], washing.geo[0]], 
+                        {
+                            "washing_id": washing.id, 
+                            balloonContent: ["<h2>",washing.name,"</h2>",
+                            "<p class='description'>",washing.description,"</p>",
+                            "<p class='address'>",washing.address,"</p>",
+                            "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",
+                            ].join(''),
+                            hintContent: ['<b>', washing.name, "</b><br/>", formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join(''),
+                            iconContent: ""
+                        }, 
+                        { 
+                            balloonCloseButton: true
+                        }
+                        )
+                    );
             }
         }
 
         function updateListView() {
-
+            var list = $("#washingslist .submenu");
+            list.html('');  // clear list
+            
+            for (var i in viewModel) {
+                var listElement = $("<a href='#' data-id='" + viewModel[i].id + "'>" + viewModel[i].name + "</a>");
+                listElement.bind('click', function(){
+                    var washing_id = $(this).data('id');
+                    mapView.geoObjects.each(function(geoObject){
+                        if (geoObject.properties.get('washing_id') == washing_id) {
+                            geoObject.balloon.open();
+                        }
+                    });
+                });
+                list.append(listElement);
+            }
         }
 
         function initLayout() {
@@ -127,8 +149,8 @@
             for (var i in viewData) {
 
                 var fields = viewData[i].fields;
-                console.log(fields);
                 list.push({
+                    "id": viewData[i].pk,
                     "address":fields.address, 
                     "name":fields.title, 
                     "description":fields.description, 
@@ -170,35 +192,7 @@
                 <li href="#" class="last"><b>Вход для партнеров</b></li>
                 <li href="#" id="washingslist"><b>Список моек &darr;</b>
                     <div class="submenu">
-                        <a href="#">Ланоил</a>
-                        <a href="#">Флагман</a>
-                        <a href="#">Соната</a>
-                        <a href="#">Аврора</a>
-                        <a href="#">Восточный экспресс</a>
-                        <a href="#">Авто спа</a>
-
-                        <a href="#">Ланоил</a>
-                        <a href="#">Флагман</a>
-                        <a href="#">Соната</a>
-                        <a href="#">Аврора</a>
-                        <a href="#">Восточный экспресс</a>
-                        <a href="#">Авто спа</a>
-
-
-                        <a href="#">Ланоил</a>
-                        <a href="#">Флагман</a>
-                        <a href="#">Соната</a>
-                        <a href="#">Аврора</a>
-                        <a href="#">Восточный экспресс</a>
-                        <a href="#">Авто спа</a>
-
-
-                        <a href="#">Ланоил</a>
-                        <a href="#">Флагман</a>
-                        <a href="#">Соната</a>
-                        <a href="#">Аврора</a>
-                        <a href="#">Восточный экспресс</a>
-                        <a href="#">Авто спа</a>
+                        <!-- washings list here -->
                     </div>
                 </li>
                 
