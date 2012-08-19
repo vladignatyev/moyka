@@ -29,14 +29,11 @@ class Washing(models.Model):
 		verbose_name = u"мойку"
 		verbose_name_plural = u"мойки"
 
-class Order(models.Model):
-	@classmethod
-	def get_order_for_user(cls,user):
-		return None
 
+class Order(models.Model):
 	washing = models.ForeignKey(Washing, editable=True, verbose_name=u'Мойка', related_name='+')
-	washing_post_number = models.IntegerField()
-	date_time = models.DateTimeField(editable=True, verbose_name=u'Дата')
+	washing_post_number = models.IntegerField(blank=True)
+	date_time = models.DateTimeField(blank=True, editable=True, verbose_name=u'Дата')
 	name = models.CharField(blank=False, max_length=64, verbose_name=u'ФИО клиента')
 	phone = models.BigIntegerField(blank=False, verbose_name=u'Телефон')
 	autono = models.CharField(blank=False, max_length=16, verbose_name=u'Номер автомобиля')
@@ -44,8 +41,20 @@ class Order(models.Model):
 	email = models.EmailField(blank=True, verbose_name=u'Электронная почта клиента')
 	cancelled = models.BooleanField(default=False, verbose_name=u'Заказ отменен?')
 	added_date = models.DateTimeField(verbose_name=u'Точная дата и время создания заказа', editable=False, auto_now=True)
+
+	def from_dict(data_dict):
+		self.washing = Washing.objects.all(pk=data_dict['washing_id'])[0]
+		self.name = data_dict.get('fio', '')
+		self.phone = data_dict.get('phone')
+
 	class Meta:
 		verbose_name = u"заказ"
 		verbose_name_plural = u"заказы"
+
+
+from django.forms import ModelForm
+class OrderForm(ModelForm):
+	class Meta:
+		model = Order
 
 
