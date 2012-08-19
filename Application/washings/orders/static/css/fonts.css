@@ -1,0 +1,11 @@
+@font-face {
+    font-family: "ProximaNova Black";
+    src: url('/static/css/fonts/ProximaNova-Black.eot');
+    src: url('/static/css/fonts/ProximaNova-Black.ttf') format("truetype");
+}
+
+@font-face {
+    font-family: "DINPro Medium";
+    src: url('/static/css/fonts/DINPro-Medium.eot');
+    src: url('/static/css/fonts/DINPro-Medium.ttf') format("truetype");
+}

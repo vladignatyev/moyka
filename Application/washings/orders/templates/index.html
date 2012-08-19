@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/html" lang="en-US">
-<head profile="http://www.w3.org/2005/10/profile">
+<head profile="http://www.w3.org/2005/10/profile">{% load static %}
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="shortcut icon" href="favicon.ico" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -9,17 +9,22 @@
     <meta name="description" content=""/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-    <script type="text/javascript" src="js/jquery.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
-    <script type="text/javascript" src="js/test_data2.js"></script>
+    <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
+    <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
     <title></title>
 
-    <link rel="stylesheet" href="css/fonts.css"/>
-    <link rel="stylesheet" href="css/main.css"/>
+    <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
+    <link rel="stylesheet" href="{% static "css/main.css" %}" />
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
     
 	<script type="text/javascript">
+
+        var viewModel = {};
+        var mapView;
+
+
         function showPopup(element, closeHandler) {
             $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
             $(element).find('.popupcontent').css('top', ($(window).height()-270)/2 + 'px');
@@ -45,13 +50,14 @@
             });
         }
 		function init () {
-			var myMap = new ymaps.Map('bigmap', {
-                center: [53.511311, 49.418084],
+            //todo: add real center from database
+			mapView = new ymaps.Map('bigmap', {
+                center: [{{ MAP_CENTER_LAT|floatformat:6 }}, {{ MAP_CENTER_LON|floatformat:6 }}],
                 zoom: 12,
                 behaviors: ['default', 'scrollZoom']
             });
 
-            myMap.controls.add('zoomControl', {right: '40px', top: '5px'});
+            mapView.controls.add('zoomControl', {right: '40px', top: '5px'});
 
             $("#orderwash").click(function(){
                 // $("#bottombar").animate({"bottom": "-" + $("#bottombar").height() + "px", "opacity": "0.3"}, 1000);
@@ -69,18 +75,39 @@
                 })
             });
 
-            var washings = parseTestData();
 
-            for (var i in washings) {
-                var washing = washings[i];
+            viewModel = parseViewData(washings_data);
+            updateMapView();
+            updateListView();
+		}
 
-                myMap.geoObjects.add(new ymaps.Placemark([washing.geo[1], washing.geo[0]], {
-                    balloonContent: ["<h6>",washing.name,"</h6>","<p class='address'>",washing.address,"</p>"].join(''),
-                    hintContent: washing.name,
+        function updateMapView() {
+            function formatTime(time) {
+                return [time.split(":")[0],time.split(":")[1]].join(':');
+            }
+
+            mapView.geoObjects.each(function (geoObject) {
+                mapView.geoObjects.remove(geoObject);
+            });
+
+            for (var i in viewModel) {
+                var washing = viewModel[i];
+
+                mapView.geoObjects.add(new ymaps.Placemark([washing.geo[1], washing.geo[0]], {
+                    balloonContent: ["<h2>",washing.name,"</h2>",
+                    "<p class='description'>",washing.description,"</p>",
+                    "<p class='address'>",washing.address,"</p>",
+                    "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",
+                    ].join(''),
+                    hintContent: ['<b>', washing.name, "</b><br/>", formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join(''),
                     iconContent: ""
                 }, { balloonCloseButton: true}));
             }
-		}
+        }
+
+        function updateListView() {
+
+        }
 
         function initLayout() {
             function centerLayouts() {
@@ -95,16 +122,20 @@
             return this.charAt(0).toUpperCase() + this.slice(1);
         }
 
-        function parseTestData() {
+        function parseViewData(viewData) {
             var list = [];
-            for (var i in test_data.features) {
-                var feature = test_data.features[i];
-                console.log(feature);
-                var address = feature.properties.description;
-                var name = feature.properties.name.toLowerCase().capitalize();
-                // var phones = feature.properties.CompanyMetaData.Phones.concat();
-                var geo = feature.properties.boundedBy[0];
-                list.push({"address":address, "name":name,/* "phones":phones, */"geo": geo});
+            for (var i in viewData) {
+
+                var fields = viewData[i].fields;
+                console.log(fields);
+                list.push({
+                    "address":fields.address, 
+                    "name":fields.title, 
+                    "description":fields.description, 
+                    "geo": [fields.geo_lon, fields.geo_lat],
+                    "start_work_day": fields.start_work_day,
+                    "end_work_day": fields.end_work_day
+                });
             }
             return list;
         }
@@ -129,7 +160,7 @@
                 <input type="text" id="hours" value="18"></input>
                 <input type="text" id="minutes" value="00" />
             </div>
-            <button style="margin:0 auto;">Записаться на мойку</button>
+            <button style="margin:0 auto;">Выбрать мойку по времени</button>
         </div>
     </div>
 
@@ -172,7 +203,7 @@
                 </li>
                 
             </ul>
-            <img id="logo" src="img/logo.png" />
+            <img id="logo" src="{% static "img/logo.png" %}" />
             
         </div>
     </div>
