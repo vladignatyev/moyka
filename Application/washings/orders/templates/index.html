@@ -152,6 +152,7 @@
             }
             centerLayouts();
             $(window).resize(centerLayouts);
+            $('#selectByTime').click(selectWashingsByTime);
         }
 
         String.prototype.capitalize = function() {
@@ -176,6 +177,24 @@
             return list;
         }
 
+        function selectWashingsByTime() {
+            tomorrow = 0;
+            hours = $('#hours').val();
+            minutes = $('#minutes').val();
+            console.log(tomorrow);
+            console.log(hours);
+            console.log(minutes);
+
+            $.get('/washings/bytoday/' + tomorrow + '/andhours/' + hours + '/minutes/' + minutes,
+                function (data) {
+                    console.log(data);
+                    viewModel = parseViewData(data);
+                    updateListView();
+                    updateMapView();
+                }
+                );
+        }
+
 
 		ymaps.ready(init);
         $(document).ready(initLayout);
@@ -196,7 +215,7 @@
                 <input type="text" id="hours" value="18"></input>
                 <input type="text" id="minutes" value="00" />
             </div>
-            <button style="margin:0 auto;">Выбрать мойку по времени</button>
+            <button id="selectByTime" style="margin:0 auto;">Выбрать мойку по времени</button>
         </div>
     </div>
 
