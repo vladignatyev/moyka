@@ -10,7 +10,9 @@ class JSONResponse(HttpResponse):
 	def __init__(self, response_data):
 		super(JSONResponse, self).__init__(json.dumps({"result":response_data}), mimetype="application/json")
 
-
+class JSONModelResponse(HttpResponse):
+    def __init__(self, response_data):
+        super(JSONModelResponse, self).__init__(serializers.serialize("json", response_data), mimetype="application/json")
 
 class JSONErrorResponse(HttpResponse):
 	def __init__(self, error_code):

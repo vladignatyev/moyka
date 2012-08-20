@@ -20,7 +20,41 @@ def get_all_washings_jsonp(request, jsonp_variable='washings_data'):
 	return orders.JSONPResponse(Washing.get_all_washings(), jsonp_variable)
 
 def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
-	pass
+	query = """
+	select *	
+	from 
+		`orders_washing` as w1
+	where 
+		w1.id not in (
+		select w.id as `id`
+		from 
+			`orders_order` as o, `orders_washing` as w
+		where 
+			o.date_time >= CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL {tommorow} DAY),' ', 
+				ADDTIME(w.start_work_day, 
+					SEC_TO_TIME(
+						ROUND(
+							TIME_TO_SEC(
+								TIMEDIFF('{hours}:{minutes}:00', w.start_work_day)
+								) / 60 / w.`timeframe_minutes`) * 60 * w.`timeframe_minutes`)))
+
+
+			and o.date_time < DATE_ADD(CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL {tommorow} DAY),' ', 
+				ADDTIME(w.start_work_day, 
+					SEC_TO_TIME(
+						ROUND(
+							TIME_TO_SEC(
+								TIMEDIFF('{hours}:{minutes}:00', w.start_work_day)
+								) / 60 / w.`timeframe_minutes`) * 60 * w.`timeframe_minutes`))), 
+				INTERVAL w.timeframe_minutes MINUTE)
+
+			and not o.cancelled
+			and o.washing_id = w.id
+			and o.washing_post_number = w.`washing_posts_count`);	
+	""".format(hours=hours, minutes=minutes, tommorow=today_or_tommorow)
+
+	print query
+	return orders.JSONModelResponse(Washing.objects.raw(query))
 
 def add_order(request):
 	if request.method == 'POST':

@@ -25,6 +25,20 @@
         var mapView;
 
 
+        function OrderModel()
+        {
+            // this.washing_id = '';
+            // this.time = '';
+            // this.
+
+
+            return this;
+        }
+
+
+        var orderModel = new OrderModel();
+
+
         function showPopup(element, closeHandler) {
             $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
             $(element).find('.popupcontent').css('top', ($(window).height()-270)/2 + 'px');
@@ -56,7 +70,7 @@
                 behaviors: ['default', 'scrollZoom']
             });
 
-            mapView.controls.add('zoomControl', {right: '40px', top: '5px'});
+            mapView.controls.add('zoomControl', {right: '40px', top: '40px'});
 
             $("#orderwash").click(function(){
                 // $("#bottombar").animate({"bottom": "-" + $("#bottombar").height() + "px", "opacity": "0.3"}, 1000);
@@ -116,7 +130,7 @@
         function updateListView() {
             var list = $("#washingslist .submenu");
             list.html('');  // clear list
-            
+
             for (var i in viewModel) {
                 var listElement = $("<a href='#' data-id='" + viewModel[i].id + "'>" + viewModel[i].name + "</a>");
                 listElement.bind('click', function(){
