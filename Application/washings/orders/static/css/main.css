@@ -94,7 +94,7 @@ body { margin: 0; padding: 0;
 .datetime .countdowns {height:75px;}
 
 #choosetime {margin: 0 auto; width:122px; padding:0;  }
-button { height: 30px; 
+button, .button { height: 30px; 
 	display: block; color: #fff; font-size:13px; text-shadow:0px 1px 2px #000; 
 	padding:0 8px;
 	border:0;
@@ -111,13 +111,13 @@ button { height: 30px;
   	cursor: pointer;
 }
 
-button:hover {
+button:hover, .button:hover {
 	background: #68a40e;
 	border-bottom: 1px solid #3b7e05;
 	border-top: 1px solid #96cb17;
 }
 
-button.disabled {
+button.disabled, .button.disabled {
 	background-color: #c3c7cf;
   	background-repeat: repeat-x;
 	border-bottom: 1px solid #a5aab5;
@@ -131,9 +131,6 @@ button.disabled {
 }
 
 #submit { float:right; margin-right: 162px; }
-
-.popup {
-}
 
 .popup .shader {
 	position:absolute; width:100%; height: 100%; background: #262729; opacity:0.57; z-index:11; 
@@ -226,6 +223,7 @@ button.disabled {
 #timeselection li { display: block; float:left; height:30px; width:80px;}
 #timeselection li a { text-align:right; font-size:14px; color: #037500; text-decoration:none; border-bottom:1px dotted #037500; }
 #timeselection li a.disabled { font-size:14px; color:#9d0c0c; border:0; font-weight:bolder; }
+#timeselection li a.selected { background: #1c85c6 !important; color:#fff !important; font-weight:bolder; }
 
 .menu { padding:0; margin:0; list-style-type:none; }
 .menu>li { display: block; float: right; border-left:1px solid #1173cb; border-right: 1px solid #0b91da; height:50px; text-decoration:none;}
@@ -264,5 +262,3 @@ li:hover .submenu {
 
 .menu>li.last { border-right:none!important; }
 .menu>li.last>b { border-right:none!important; padding:20px 24px 0 20px; }
-
-

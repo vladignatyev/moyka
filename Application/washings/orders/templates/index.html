@@ -21,16 +21,29 @@
     
 	<script type="text/javascript">
 
-        var viewModel = {};
+        var viewModel;
+
+
         var mapView;
 
 
         function OrderModel()
         {
-            // this.washing_id = '';
-            // this.time = '';
-            // this.
+            this.clear = function() {
+                this.washing_id = '';
+                this.time = '';
+                this.tomorrow = 0;
+                this.fio = '';
+                this.phone = '';
+                this.carno = '';
+                this.email = '';
+            }
 
+            this.addOrder = function() {
+
+            }
+
+            this.clear();
 
             return this;
         }
@@ -51,16 +64,18 @@
                 var shader = $(element).find('.shader')[0];
 
                 function close(result){
-                    if (!closeHandler || (closeHandler && !closeHandler(element, result)))
-                    {
-                        $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
-                        $('#bottom').animate({'bottom': '0'}, "fast");});
+                    return function (){
+                        if (!closeHandler || (closeHandler && !closeHandler(element, result)))
+                        {
+                            $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
+                            $('#bottom').animate({'bottom': '0'}, "fast");});
+                        }
+                        $(shader).unbind('click');
                     }
-                    $(shader).unbind('click');
                 }
 
-                $(shader).add('.cancelbutton').bind('click', close.bind('cancel'));
-                $(".okbutton").bind('click', close.bind('ok'));
+                $(shader).add('.cancelbutton').bind('click', close('cancel'));
+                $(".okbutton").bind('click', close('ok'));
             });
         }
 		function init () {
@@ -81,12 +96,7 @@
                 // showPopup($("#choosetimepopup"));
             });
 
-            $("#washingslist a").each(function(i,obj){
-                $(obj).click(function(){
-                    showPopup($("#choosebywashing"), function(){$("#washingslist").show();}); 
-                    $("#washingslist").hide(); 
-                })
-            });
+                    
 
 
             viewModel = parseViewData(washings_data);
@@ -94,18 +104,23 @@
             updateListView();
 		}
 
-        function updateMapView() {
+
             function formatTime(time) {
                 return [time.split(":")[0],time.split(":")[1]].join(':');
             }
 
+
+        function updateMapView() {
+
             mapView.geoObjects.each(function (geoObject) {
                 mapView.geoObjects.remove(geoObject);
             });
-
+            
             for (var i in viewModel) {
                 var washing = viewModel[i];
 
+                buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto;">Выбрать эту мойку</button>';
+                // showPopup($("#choosebywashing"), function(){$("#washingslist").show();}); 
                 mapView.geoObjects.add(
                     new ymaps.Placemark(
                         [washing.geo[1], washing.geo[0]], 
@@ -115,6 +130,7 @@
                             "<p class='description'>",washing.description,"</p>",
                             "<p class='address'>",washing.address,"</p>",
                             "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",
+                            buttonsContent
                             ].join(''),
                             hintContent: ['<b>', washing.name, "</b><br/>", formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join(''),
                             iconContent: ""
@@ -124,6 +140,7 @@
                         }
                         )
                     );
+                var washing_id = washing.id;
             }
         }
 
@@ -145,7 +162,34 @@
             }
         }
 
+        function updateTimeGridViewWithData(dataObject) {
+            console.log(orderModel);
+            var data = dataObject.result;
+            $("#timeselection").html('');
+            for (i in data) {
+                var timegridItem = data[i];
+                var selectedClass = '';
+                if (timegridItem.time.split(':')[0] == orderModel.time[0] && timegridItem.time.split(':')[1] == orderModel.time[1] ) {
+                    selectedClass = 'selected';
+                }
+
+                console.log('selecetedClass: '  + selectedClass);
+                $("#timeselection").append('<li class="' + selectedClass + '"><a ' + (timegridItem.available == 1?'class ="'+ selectedClass + '"':'class="disabled ' + selectedClass + '"') 
+                    + 'href="#" data-hours="' + timegridItem.time.split(':')[0] + 
+                    '" data-minutes="' + timegridItem.time.split(':')[1] + '">' + formatTime(timegridItem.time) + '</a></li>');
+
+
+            }
+        }
+
+        function retrieveDataForTimeGridByWashingIdAndToday(washingId, todayortomorrow) {
+            $.get('/washings/timegrid/' + washingId + '/bytoday/' + todayortomorrow, function(data){
+                updateTimeGridViewWithData(data);
+            });
+        }
+
         function initLayout() {
+
             function centerLayouts() {
                 var windowWidth = $(document).width();
                 $('.hcenter').each(function(i,obj){$(obj).css({"left": (windowWidth - $(obj).width())/2});});
@@ -153,6 +197,66 @@
             centerLayouts();
             $(window).resize(centerLayouts);
             $('#selectByTime').click(selectWashingsByTime);
+
+            function selectWashingClickHandler(){
+                showPopup($("#choosebywashing"), choosebywashingCloseHandler); 
+                washingId = $(this).data('washingid');
+                orderModel.washingId = washingId;
+                for (i in viewModel) {
+                    if (viewModel[i].id == washingId) {
+                        retrieveDataForTimeGridByWashingIdAndToday(washingId, 0);
+
+                        $('#choosebywashing h5').html(viewModel[i].name);
+                        $('#choosebywashing h6').html(viewModel[i].address);
+                        $($('#choosebywashing .radio')[0]).attr('checked', '1');
+
+                        break;
+                    }
+                }
+            }
+
+            function pickTimeClickHandler() {
+                orderModel.time = [$(this).data('hours'), $(this).data('minutes')];
+
+                $('#choosebywashing a').each(function(i,obj){
+                    if ($(obj).hasClass('selected')) {
+                        $(obj).removeClass('selected');
+                    }
+                });
+                $(this).addClass('selected');
+
+            }
+
+            function switchTodayTomorrowHandler(){
+                if ( $($('#choosebywashing .radio')[0]).attr('checked')) { 
+                    orderModel.tomorrow = 0;
+                } else {
+                    orderModel.tomorrow = 1;
+                }
+                retrieveDataForTimeGridByWashingIdAndToday(orderModel.washingId, orderModel.tomorrow);
+            }
+
+            function choosebywashingCloseHandler(element, result) {
+                console.log(result);
+                if (result == 'ok') {
+                    setTimeout(function(){showPopup($("#orderForm"), orderFormResultHandler); }, 500);
+                } 
+            }
+
+            function orderFormResultHandler(element, result) {
+                if (result == 'ok') {
+                    // $.post('/');
+                    return true;
+                    console.log('MAKE ORDER!');
+                }
+                return false;
+            }
+
+            $('button.selectwashing').live('click', selectWashingClickHandler);
+            $('#choosebywashing a').live('click', pickTimeClickHandler);
+            $('#choosebywashing .radio').live('click', switchTodayTomorrowHandler);
+
+            showPopup($('#orderForm'));
         }
 
         String.prototype.capitalize = function() {
@@ -181,31 +285,27 @@
             tomorrow = 0;
             hours = $('#hours').val();
             minutes = $('#minutes').val();
-            console.log(tomorrow);
-            console.log(hours);
-            console.log(minutes);
 
             $.get('/washings/bytoday/' + tomorrow + '/andhours/' + hours + '/minutes/' + minutes,
                 function (data) {
-                    console.log(data);
                     viewModel = parseViewData(data);
                     updateListView();
                     updateMapView();
-                }
-                );
+                });
         }
-
-
 		ymaps.ready(init);
         $(document).ready(initLayout);
+
     </script>
 
     <style type="text/css">
         /*#bottombar { display: none;}*/
         #choosetimepopup, #choosebywashing { display: none; z-index:10;}
-        #secondstep { opacity: 0.0;} </style>
+        #secondstep { opacity: 0.0;} 
+    </style>
 </head>
 <body>
+  
 	<div id="bigmap"></div>
 	
     <div id="bottom">
@@ -244,29 +344,12 @@
 
                 <div class="leftsidebar">
                     <div class="todaytomorrowselector">
-                        <label><input type="radio" class="radio" value="today" name="todayortomorrow" />сегодня</label>
-                        <label><input type="radio" class="radio" value="tommorow" name="todayortomorrow" />завтра</label>
+                        <label><input type="radio" class="radio" value="0" name="todayortomorrow" />сегодня</label>
+                        <label><input type="radio" class="radio" value="1" name="todayortomorrow" />завтра</label>
                     </div>
                 </div>
                 <div class="rightsidebar">
                     <ul id="timeselection">
-                        <li><a class="disabled" href="#">08:00</a></li>
-                        <li><a class="disabled" href="#">09:00</a></li>
-                        <li><a class="disabled" href="#">10:00</a></li>
-                        <li><a class="disabled" href="#">11:00</a></li>
-                        <li><a class="disabled" href="#">12:00</a></li>
-                        <li><a href="#">13:00</a></li>
-                        <li><a href="#">14:00</a></li>
-                        <li><a class="disabled" href="#">15:00</a></li>
-                        <li><a href="#">16:00</a></li>
-                        <li><a class="disabled" href="#">17:00</a></li>
-                        <li><a href="#">18:00</a></li>
-                        <li><a href="#">19:00</a></li>
-                        <li><a href="#">20:00</a></li>
-                        <li><a href="#">21:00</a></li>
-                        <li><a href="#">22:00</a></li>
-                        <li><a href="#">23:00</a></li>
-                        <li><a href="#">00:00</a></li>
                     </ul>
                     <div class="popupbuttons">
                         <button class="okbutton">ОК</button>
@@ -276,8 +359,36 @@
             </div>
         </div>
     </div>
+    <div id="orderForm" class="popup">
+        <div class="shader"></div>
+        <div class="popupcontent" style="width:270px;">
+            <form>
+                  {% csrf_token %}
+                <div class="form">
+                    <h4>Заполните поля заказа</h4>
+                    <p><input type="text" placeholder="Ваше имя" 
+                        style="border-color:#f00; width: 260px; border-radius:4px; border-width:1px; height:25px; padding:0px 0px 0px 5px; margin:0;"
+                        required="required" class="fio required"/></p>
+                    <p><input placeholder="Телефон" type="text" 
+                        style="border-color:#f00; width: 260px; border-radius:4px; border-width:1px; height:25px; padding:0px 0px 0px 5px; margin:0;"
+                        required="required" class="phone required"/></p>
+                    <p><input placeholder="Номер автомобиля" 
+                        style="border-color:#f00; width: 260px; border-radius:4px; border-width:1px; height:25px; padding:0px 0px 0px 5px; margin:0;"
+                        type="text" required="required" class="carno required" /></p>
+                    <p><input placeholder="E-mail (необязательно)" 
+                        style="width: 260px; border-radius:4px; border-width:1px; height:25px; padding:0px 0px 0px 5px; margin:0;"
+                        type="email" class="email" /></p>
+                </div>
+                <div class="popupbuttons">
+                    <button style="margin-left:0px;" class="cancelbutton">Отменить</button>
+                    <input type="submit" style="margin-top:10px;float:left;width:150px;" class="button okbutton" value='Выполнить заказ' />
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <div id="choosetimepopup" class="popup">
+
+    <!--<div id="choosetimepopup" class="popup">
         <div class="shader"></div>
         <div class="popupcontent">
             <div class="inner">
@@ -335,6 +446,6 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>-->
 </body>
 </html>
