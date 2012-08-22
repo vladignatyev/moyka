@@ -1,0 +1,3 @@
+recursive-include orders/fixtures *
+recursive-include orders/templates *
+recursive-include orders/static *
