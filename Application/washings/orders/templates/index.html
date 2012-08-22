@@ -20,15 +20,6 @@
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
     
 	<script type="text/javascript">
-
-        var viewModel;
-
-
-        var mapView;
-
-
-
-
         function OrderModel()
         {
             this.clear = function() {
@@ -50,40 +41,43 @@
                 return [hours, minutes].join(':'); 
             }
 
-            this.addOrder = function() {
-                console.log('csrf:'+$('input[name=csrfmiddlewaretoken]').val());
-                $.ajax({
-                    type: 'POST',
-                    url: '/washings/orders/add/',
-                    data: {
-                        'washing_id': this.washingId,
-                        'date_time': this.formatTime(this.time),
-                        'tomorrow': this.tomorrow,
-                        'name': this.fio,
-                        'phone': this.phone,
-                        'autono': this.carno,
-                        'email': this.email,
-                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
-                    },
-                    success: function(data){
-                        alert('success! ' + data);
-                        console.log(data);
-                    },
-                    error: function(error) {
-                        alert(error);
-                        console.log(error);
+            this.addOrder = function(successCallback, errorCallback) {
+                postData = {
+                    'washing_id': this.washingId,
+                    'date_time': this.formatTime(this.time),
+                    'tomorrow': this.tomorrow,
+                    'name': this.fio,
+                    'phone': this.phone,
+                    'autono': this.carno,
+                    'email': this.email,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                };
+
+                $.post('/washings/orders/add/', postData, function(data, status){
+                    if (status == 'success') {
+                        if (data.result) {
+                            if (data.result.error) {
+                                console.log('error: ' + data.result.error);
+                                errorCallback(data.result.error, data);
+                            }
+                            if (data.result.new_order) {
+                                successCallback(data.result.new_order, data);
+                            }
+                        }
+                    } else {
+                        console.log('senderror: ' + data);
+                        errorCallback('senderror', null);
                     }
                 });
             }
 
             this.clear();
-
             return this;
         }
 
-
+        var viewModel;
+        var mapView;
         var orderModel = new OrderModel();
-
 
         function showPopup(element, closeHandler) {
             $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
@@ -102,9 +96,10 @@
                         {
                             $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
                             $('#bottom').animate({'bottom': '0'}, "fast");});
-                            $(shader).unbind('click');
-                        }
-                        
+                            $(shader).add('.cancelbutton').unbind('click');
+                            $(".okbutton").unbind('click');
+                        }  
+                        return true;                      
                     }
                 }
 
@@ -112,6 +107,23 @@
                 $(".okbutton").bind('click', close('ok'));
             });
         }
+
+        function closePopup(element, result, closeHandler, playAnimation) {
+            if (!closeHandler || closeHandler && !closeHandler(element, result)) {
+                var shader = $(element).find('.shader')[0];
+                if (playAnimation) {
+                    $(element).fadeOut('fast',function(){$('#top').animate({'top': '0'}, "fast");
+                    $('#bottom').animate({'bottom': '0'}, "fast");});
+                    
+                } else {
+                    $(element).hide();
+                    $('#top').animate({'top': '0'}, "fast");
+                }
+                $(shader).add('.cancelbutton').unbind('click');
+                $(".okbutton").unbind('click');
+            }
+        }
+
 		function init () {
 			mapView = new ymaps.Map('bigmap', {
                 center: [{{ MAP_CENTER_LAT|floatformat:6 }}, {{ MAP_CENTER_LON|floatformat:6 }}],
@@ -126,14 +138,11 @@
             updateListView();
 		}
 
-
-            function formatTime(time) {
-                return [time.split(":")[0],time.split(":")[1]].join(':');
-            }
-
+        function formatTime(time) {
+            return [time.split(":")[0],time.split(":")[1]].join(':');
+        }
 
         function updateMapView() {
-
             mapView.geoObjects.each(function (geoObject) {
                 mapView.geoObjects.remove(geoObject);
             });
@@ -185,7 +194,6 @@
         }
 
         function updateTimeGridViewWithData(dataObject) {
-            console.log(orderModel);
             var data = dataObject.result;
             $("#timeselection").html('');
             for (i in data) {
@@ -196,10 +204,8 @@
                 }
 
                 $("#timeselection").append('<li class="' + selectedClass + '"><a ' + (timegridItem.available == 1?'class ="'+ selectedClass + '"':'class="disabled ' + selectedClass + '"') 
-                    + 'href="#" data-hours="' + timegridItem.time.split(':')[0] + 
+                    + 'href="javascript:;" data-hours="' + timegridItem.time.split(':')[0] + 
                     '" data-minutes="' + timegridItem.time.split(':')[1] + '">' + formatTime(timegridItem.time) + '</a></li>');
-
-
             }
         }
 
@@ -210,7 +216,6 @@
         }
 
         function initLayout() {
-
             function centerLayouts() {
                 var windowWidth = $(document).width();
                 $('.hcenter').each(function(i,obj){$(obj).css({"left": (windowWidth - $(obj).width())/2});});
@@ -258,7 +263,6 @@
             }
 
             function choosebywashingCloseHandler(element, result) {
-                console.log(result);
                 if (result == 'ok') {
                     if ($('#choosebywashing li a.selected').length == 0) {
                         alert('Выберите удобное вам время!');
@@ -274,7 +278,45 @@
                     orderModel.phone = $('#orderForm .phone').val();
                     orderModel.email = $('#orderForm .email').val();
                     orderModel.carno = $('#orderForm .carno').val();
-                    orderModel.addOrder();
+
+                    var address;
+                    var washingName;
+
+                    for (var i in viewModel) {
+                        if (viewModel[i].id == orderModel.washingId) {
+                            address = viewModel[i].address;
+                            washingName = viewModel[i].name;
+                        }
+                    }
+
+                    orderModel.addOrder(function(newOrder, data){
+                        closePopup('#orderForm', 'cancel', null, true);
+                        $('#notification .notifyContent').html(
+                            [
+                                '<h4>', 'Заказ №', newOrder, ' успешно зарегистрирован!</h4>',
+                                '<p>', 'Автомойка «', washingName, '» по адресу «', address, '» на ', 
+                                orderModel.tomorrow?'завтра ' : 'сегодня в&nbsp;', orderModel.formatTime(), 
+                                ' для автомобиля с госномером ', orderModel.carno ,'</p>',
+                                '<p class="msg">','Пожалуйста, запомните номер заказа (' + newOrder + ') и не опаздывайте к назначенному времени!','</p>'
+                            ].join(''));
+                        showPopup($('#notification'));
+                    },
+                    function(error, data) {
+                        closePopup('#orderForm', 'cancel', null, true);
+                        if (error == 'senderror') {
+                            $('#notification .notifyContent').html(
+                            ['<h4>', 'Ошибка на странице!</h4>',
+                            '<p>', 'Произошла досадная ошибка. Пожалуйста перегрузите веб-страницу в вашем браузере и повторите попытку!','</p>'
+                            ].join(''));                        
+                        } else {
+                            $('#notification .notifyContent').html(
+                                [
+                                    '<h4>', 'Ой-ой!</h4>',
+                                    '<p>', 'К сожалению, зарегистрировать заказ не удалось. Попробуйте повторите попытку вновь, или укажите другое время. Возможно кто-то другой зарезервировал это время ','</p>'
+                                ].join(''));
+                        }
+                        showPopup($('#notification'));
+                    });
                     return true;
                 }
             }
@@ -282,8 +324,6 @@
             $('button.selectwashing').live('click', selectWashingClickHandler);
             $('#choosebywashing a:not(.disabled)').live('click', pickTimeClickHandler);
             $('#choosebywashing .radio').live('click', switchTodayTomorrowHandler);
-
-            showPopup($('#orderForm'));
         }
 
         String.prototype.capitalize = function() {
@@ -293,7 +333,6 @@
         function parseViewData(viewData) {
             var list = [];
             for (var i in viewData) {
-
                 var fields = viewData[i].fields;
                 list.push({
                     "id": viewData[i].pk,
@@ -388,7 +427,7 @@
     <div id="orderForm" class="popup">
         <div class="shader"></div>
         <div class="popupcontent" style="width:270px;">
-            <form>
+            <form action="javascript:;">
                   {% csrf_token %}
                 <div class="form">
                     <h4>Заполните поля заказа</h4>
@@ -412,5 +451,17 @@
             </form>
         </div>
     </div>
+    <div id="notification" class="popup">
+        <div class="shader"></div>
+        <div class="popupcontent" style="width:320px;">
+            <div class="notifyContent">
+                
+            </div>
+            <div class="popupbuttons">
+                <button style="margin-left:0px;" class="cancelbutton">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

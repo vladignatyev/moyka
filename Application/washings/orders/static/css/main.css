@@ -132,6 +132,7 @@ button.disabled, .button.disabled {
 
 #submit { float:right; margin-right: 162px; }
 
+.popup { display:none;}
 .popup .shader {
 	position:absolute; width:100%; height: 100%; background: #262729; opacity:0.57; z-index:11; 
 }
