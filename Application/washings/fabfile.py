@@ -47,9 +47,11 @@ def deploy():
         run("chmod 777 manage.py")
 
         run("./env/bin/python manage.py syncdb")
-        # put("./orders/fixtures/initial.json", "initial.json")
-        # run("./env/bin/python manage.py loaddata initial.json")
-        # run("rm initial.json")
+
+        if raw_input('Do you need to reload all data? (YES/no)') == 'YES':
+            put("./orders/fixtures/initial.json", "initial.json")
+            run("./env/bin/python manage.py loaddata initial.json")
+            run("rm initial.json")
         run("./env/bin/python manage.py collectstatic --noinput")
         put("wsgi.py", "wsgi.py")
         run("touch uwsgi.yml")
