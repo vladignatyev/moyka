@@ -3,14 +3,6 @@
 from django.db import models
 
 class Washing(models.Model):
-	@classmethod
-	def get_all_washings(cls):
-		objects = Washing.objects.all()
-		objects_list = []
-		for obj in objects:
-			objects_list.append(obj)
-		return objects_list
-
 	title = models.CharField(max_length=64, blank=False, verbose_name=u'Название')
 	geo_lon = models.FloatField(blank=False, verbose_name=u'Восточная долгота')
 	geo_lat = models.FloatField(blank=False, verbose_name=u'Северная широта')
@@ -40,13 +32,13 @@ class Order(models.Model):
 	autobrand = models.CharField(blank=True, max_length=64, verbose_name=u'Марка авто')	
 	email = models.EmailField(blank=True, verbose_name=u'Электронная почта клиента')
 	cancelled = models.BooleanField(default=False, verbose_name=u'Заказ отменен?')
+	is_done = models.BooleanField(default=False, verbose_name=u'Заказ исполнен?')
 	added_date = models.DateTimeField(verbose_name=u'Точная дата и время создания заказа', editable=False, auto_now=True)
 	csrfmiddlewaretoken = models.CharField(max_length=255, editable=False)
 
-	def from_dict(data_dict):
-		self.washing = Washing.objects.all(pk=data_dict['washing_id'])[0]
-		self.name = data_dict.get('fio', '')
-		self.phone = data_dict.get('phone')
+	is_created_by_staff = models.BooleanField(default=False, blank=True)
+	details = models.CharField(max_length=255, editable=True, blank=True)	
+	note = models.TextField(editable=True, verbose_name=u'Примечание оператора', blank=True)
 
 	class Meta:
 		verbose_name = u"заказ"

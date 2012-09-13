@@ -3,24 +3,28 @@ from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import views as auth_views
 from django.template import RequestContext
 from django.http import Http404
-# from django.core.exceptions import DoesNotExist
-
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 
 import re
 import orders
 from orders.models import Washing, Order, OrderForm
-
-
 from datetime import date, datetime, time, timedelta
 
 def index(request):
 	return render_to_response('index.html', {"MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
 		context_instance=RequestContext(request))
 
+def operator(request, washing_id):
+	try:
+		washing = Washing.objects.get(pk=washing_id)
+		print washing
+		return render_to_response('admin.html', {'washing':washing}, context_instance=RequestContext(request))
+	except Washing.DoesNotExist:
+		raise Http404
+
 def get_all_washings_jsonp(request, jsonp_variable='washings_data'):
-	return orders.JSONPResponse(Washing.get_all_washings(), jsonp_variable)
+	return orders.JSONPResponse(Washing.objects.all(), jsonp_variable)
 
 def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	washing = Washing.objects.get(pk=washing_id)
@@ -39,8 +43,6 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 		AND
 			o.date_time < DATE_ADD(DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY), INTERVAL 1 DAY);
 	""".format(washing_id=washing_id, tomorrow=today_or_tommorow, washing_posts_count=washing.washing_posts_count)
-
-	print query
 
 	available_times = []
 
@@ -105,7 +107,6 @@ def add_order(request, default_method='POST'):
 		washing = None
 		try:
 			washing_id = request.REQUEST['washing_id']
-			print u"washing_id %s" % washing_id
 			washing = Washing.objects.get(pk=washing_id)
 		except ValueError:
 			print u"unable to find such washing: %s" % pk
@@ -146,7 +147,6 @@ def add_order(request, default_method='POST'):
 		time = time_start = washing.start_work_day
 		time_delta = timedelta(minutes=washing.timeframe_minutes)
 		while time <= washing.end_work_day:
-			print "%s vs %s" % (str(time), request.REQUEST['date_time'])
 			if str(time) == request.REQUEST['date_time'] + ':00':
 				timegrid_matches = True
 				break
@@ -181,7 +181,6 @@ def add_order(request, default_method='POST'):
 		""".format(washing_id=washing.id,
 			date_time_str=date_time_str)
 
-		print query
 		occupied_orders = Order.objects.raw(query)
 		if len(list(occupied_orders)) > 0:
 			transaction.rollback()
@@ -205,8 +204,6 @@ def add_order(request, default_method='POST'):
 			transaction.rollback()
 			raise Http404
 		new_order = f.save(commit=False)
-
-
 
 		post_number_query = """
 		SELECT o.*
@@ -248,8 +245,43 @@ def add_order(request, default_method='POST'):
 		transaction.rollback()
 		raise Http404
 
-def get_user_order_data(request):
-	pass
+# @login_required
+def operator_viewmodel(request, day, month, year, washing_id):
+	post_number_query = """
+		SELECT o.*
+		FROM
+			`orders_order` as o,
+			`orders_washing` as w
+		WHERE
+			o.washing_id = w.id
+			AND
+				w.id = {washing_id}
+			AND 
+				o.date_time >= CONCAT('{year}-{month}-{day}', ' ', w.`start_work_day`)
+			AND 
+				o.date_time <= CONCAT('{year}-{month}-{day}', ' ', w.`end_work_day`)
+			AND 
+				o.cancelled = 0
+		ORDER BY o.washing_post_number DESC;
+		""".format(washing_id=washing_id, year=year, month=month, day=day)
+	orders_items = Order.objects.raw(post_number_query)
+	
+	washing = Washing.objects.get(pk=washing_id)
 
-def timeframes_by_washing(request):
-	pass
+	timeframes = []
+	time = time_start = washing.start_work_day
+	time_delta = timedelta(minutes=washing.timeframe_minutes)
+	while time <= washing.end_work_day:
+		timeframes.append(time.strftime('%H:%M'))
+		time = (datetime.combine(datetime.today(), time) + time_delta).time()
+# {"postnumber":1, "datetime": '09:00', "autono": 'Ш432ВБ', "name":'Иван', "note": ''},
+	result_orders = []
+	for order in orders_items:
+		result_orders.append({
+			'id':order.id,
+			'autono':order.autono, 'postnumber':order.washing_post_number, 
+			'datetime':order.date_time.strftime('%H:%M'), 'name':order.name, 'note':order.note, 
+			'details':order.details, 'is_created_by_staff':order.is_created_by_staff, 'autobrand':order.autobrand,
+			'phone':order.phone})
+
+	return orders.JSONResponse({'timeframes_stamp':timeframes, 'timeframes':result_orders}) 

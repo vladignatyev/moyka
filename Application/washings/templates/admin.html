@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">{% load static %}
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="robots" content="index, follow"/>
+    <meta name="keywords" content="icon design, ios, retina, mac os x, osx, os x"/>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="{% static "css/admin/jqueryui/ui-lightness/jquery-ui-1.8.23.custom.css" %}" />
+    <link rel="stylesheet" href="{% static "css/admin/jqueryui/flick/jquery-ui-1.8.23.custom.css" %}" />
+    <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
+    <link rel="stylesheet" href="{% static "css/admin.css" %}" />
+
+    <script type="text/javascript" src="{% static "js/admin/jquery-1.8.0.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/admin/jquery-ui-1.8.23.custom.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/admin/jquery.ui.datepicker-ru.js" %}"></script>
+
+    <title>Управление заказами</title>
+
+    <script type="text/javascript">
+        function init() {
+            setupDatepicker();
+            retrieveData();
+        }
+
+        function setupDatepicker() {
+            $('#datepicker').datepicker({
+                inline: true,
+                onSelect: function(dateText, inst) { 
+                    hidePopup();
+
+                    day = inst.selectedDay;
+                    month = inst.selectedMonth + 1;
+                    year = inst.selectedYear;
+
+                    viewState.selectedDate = [day, month, year];
+
+                    retrieveData();
+                }
+            });
+        }
+
+        function retrieveData() {
+            $.get(['/operator/data/byday/',viewState.selectedDate[0],
+                '/month/',viewState.selectedDate[1],
+                '/year/',viewState.selectedDate[2],
+                '/washing/',washingId].join(''), 
+                {}, 
+                function(data, status){
+                    if (status == 'success') {
+                        viewModel = data.result;
+                        updateView();
+                    } 
+                });
+        }
+
+        var viewModel = {};
+
+        function getCurrentDate() {
+            var d = new Date();
+            return [d.getDate(), d.getMonth()+1, d.getFullYear()];
+        }
+
+        var viewState = {
+            postStart: 1,
+            postEnd: {{ washing.washing_posts_count }},
+            selectedDate: getCurrentDate()
+        };
+
+        var washingId = {{ washing.id }};
+
+        function drawHeader() {
+            var html = '<div class="c">Время</div>';
+            for (var i = viewState.postStart; i <= viewState.postEnd; i++)
+                html += '<div class="c">' + i + ' пост</div>';
+            html+='<div class="c">Время</div>';
+            $('.header').html(html);
+        }
+
+        function updateView() {
+            drawHeader();
+            $(".orders").html('');
+            if (viewModel.timeframes_stamp.length < 1) {
+                $(".orders").html('<h3>Заказы отсутствуют</h3>');
+                return;
+            }
+                
+            for (var t in viewModel.timeframes_stamp) {
+                time = viewModel.timeframes_stamp[t];
+                ordersForTime = [];
+                for (var i = 0; i < viewModel.timeframes.length; i++) {
+                    frame = viewModel.timeframes[i];
+                    if (frame.datetime == time 
+                        && frame.postnumber >= viewState.postStart 
+                        && frame.postnumber <= viewState.postEnd) {
+                        ordersForTime.push(frame);
+                    }
+                }
+
+                function sortByPostNumber (a, b) {
+                    if (b.postnumber > a.postnumber) return -1;
+                    if (b.postnumber < a.postnumber) return 1;
+                    return 0;
+                }
+
+                ordersForTime.sort(sortByPostNumber);
+
+                rowHtml = '<div class="row"><div class="c">' + time + '</div>';
+                for (var j = 0; j < viewState.postEnd - viewState.postStart + 1; j++) {
+                    content = '';
+                    if (j < ordersForTime.length) {
+                        order = ordersForTime[j];
+                        content = order.autono;
+                        rowHtml += '<div data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + content + '</div>';
+                    } else
+                    rowHtml += '<div data-timeframe="' + time + '" data-postnumber="' + (j+viewState.postStart) + '" class="c"></div>';
+                }
+                rowHtml += '<div class="c">' + time + '</div></div>';
+                $(".orders").append(rowHtml);
+            }
+        }
+
+        $('#popup .close').live('click', function(){ hidePopup(); })
+
+        $('.c').live('click', function(){
+            hideSelection();
+            $(this).addClass('selected');
+
+            pos = $(this).position();
+            x = pos.left;
+            y = pos.top;
+
+            var id = $(this).data('id');
+            if (!id) {
+                timeframe = $(this).data('timeframe');
+                postnumber = $(this).data('postnumber');
+                showCreatePopup(timeframe, postnumber, x, y);
+                return;
+            }
+
+            var orderById;
+            for (var i = 0; i < viewModel.timeframes.length; i++) {
+                order = viewModel.timeframes[i];
+                if (order.id == id) {
+                    orderById = order;
+                    break;
+                }
+            }
+
+            showUpdatePopup(orderById, x, y);
+        });
+
+        $('#popup .cancelbutton').live('click', deletePopup);
+        $('#popup .okbutton').live('click', submitPopup);
+
+        function hideSelection() {
+            $('.c').each(function(i,obj){if ($(obj).hasClass('selected')) $(obj).removeClass('selected');});
+        }
+
+        function hidePopup() {
+            $('#popup').hide();
+            hideSelection();
+        }
+
+        function showUpdatePopup(order, x, y) {
+            $('#popup').show();
+            $("#popup").css('left', x + 'px');
+            $("#popup").css('top', y + 'px');
+            $('#popup .cancelbutton').show();
+
+            setPopupDataWithOrder(order);
+        }
+
+        function showCreatePopup(timeframe, postnumber, x, y) {
+            $('#popup').show();   
+            $("#popup").css('left', x + 'px');
+            $("#popup").css('top', y + 'px');
+            $('#popup .cancelbutton').hide();
+
+            $('#popup .orderId').val('');
+            $('#popup .autono').val('');
+            $('#popup .details').val('');
+            $('#popup .name').val('');
+            $('#popup .notes').text('');
+        }
+
+        function setPopupDataWithOrder(order)
+        {
+            $('#popup .orderId').val(order.id);
+            $('#popup .autono').val(order.autono);
+            $('#popup .details').val(order.details);
+            $('#popup .name').val(order.name);
+            $('#popup .notes').val(order.note);   
+        }
+
+        function grabPopupData()
+        {
+            var resultObject = {
+                id: $('#popup .orderId').val(),
+                autono: $('#popup .autono').val(),
+                details: $('#popup .details').val(),
+                name: $('#popup .name').val(),
+                note: $('#popup .notes').val()
+            };
+            console.log(resultObject);
+            return resultObject;
+        }
+
+        function submitPopup() {
+            updateOrder(grabPopupData());
+        }
+
+        function deletePopup() {
+            deleteOrder(grabPopupData());
+        }
+
+        function deleteOrder(order) {
+            if (confirm('Вы уверены что хотите удалить этот заказ?')) {
+                $.get(['/operator/data/delete/',order.id].join('')
+                {}, 
+                function(data, status){
+                    if (status == 'success') {
+                        retrieveData();
+                        hidePopup();
+                    } else {
+                        alert('Не удалось удалить выбранный заказ. Повторите попытку!');
+                    }
+                });
+            }
+        }
+
+        function updateOrder(order) {
+            if (order.id) {
+                $.post(['/operator/data/update/',order.id].join('')
+                order, 
+                function(data, status){
+                    if (status == 'success') {
+                        retrieveData();
+                        hidePopup();
+                    } else {
+                        alert('Не удалось изменить выбранный заказ. Повторите попытку!');
+                    }
+                });
+            } else {
+                $.post(['/operator/data/create/washing/',washingId].join('')
+                order, 
+                function(data, status){
+                    if (status == 'success') {
+                        retrieveData();
+                        hidePopup();
+                    } else {
+                        alert('Не удалось создать заказ. Повторите попытку!');
+                    }
+                });
+            }
+        }
+
+        $(document).ready(init);
+    </script>
+</head>
+<body>
+
+<div id="popup" style="left:-10000px;">
+    <div class="close"></div>
+
+    <input type="text" placeholder="Номер авто" class="autono field" value="" />
+    <input type="text" placeholder="Детали заказа" class="details field" value="" />
+    <input type="text" placeholder="Имя клиента" class="name field" value="" />
+    <textarea class="notes"></textarea>
+    <div class="buttons">
+        <input type="hidden" class="orderId" value="" />
+        <input type="button" click="deletePopup()" style="float:left;width:70px;"
+         class="button cancelbutton" value='Удалить' />
+        <input type="button" click="submitPopup()" style="margin-left:6px;float:left;width:70px;"
+         class="button okbutton" value='Готово' />
+    </div>
+</div>
+
+<div id="top">
+    <div id="topbar">
+        <ul class="menu">
+            <li href="#" class="last"><b><a href="/logout/">Выход</a></b></li>
+        </ul>
+        <img id="logo" src="{% static "img/logo.png" %}" />
+    </div>
+</div>
+
+<div style="overflow:hidden; border: 1px solid #8e91a0; border-radius: 5px; max-width: 960px; margin:0 auto; height:645px; margin-top:80px; box-shadow:0px 2px 2px rgba(0,0,0,0.3);">
+    <table id="editor" cellspacing="0" cellpadding="0">
+        <tr>
+        <td valign="top" id="calendarPanel" style="border-right:1px solid #b0b1b2;">
+            <div class="head">
+                <h2>{{ washing.title }}</h2>
+                <p class="contacts">{{ washing.address }}</p>
+            </div>
+            <div class="calendar" id="datepicker">
+            </div>
+            <div class="admin">
+            </div>
+        </td>
+        <td valign="top" id="ordersEditor">
+            <div class="head" style="height:60px; border-bottom:1px solid #b0b1b2;"><h1>Таблица постов</h1></div>
+            <div class="header">
+            </div>
+            <div class="orders">
+                <div class="row">
+                    <div class="c">08:00</div>
+                    <div class="c">1 пост</div>
+                    <div class="c">2 пост</div>
+                    <div class="c">3 пост</div>
+                    <div class="c">4 пост</div>
+                    <div class="c">5 пост</div>
+                    <div class="c">08:00</div>
+                </div>
+            </div>
+        </td>
+    </table>
+</div>
+
+</body>
+</html>

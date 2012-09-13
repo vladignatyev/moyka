@@ -1,6 +1,6 @@
 # Django settings for washings project.
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -12,9 +12,9 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'moykainfo_ru',                      # Or path to database file if using sqlite3.
+        'NAME': 'washings',                      # Or path to database file if using sqlite3.
         'USER': 'root',                      # Not used with sqlite3.
-        'PASSWORD': 'g1eRQ9ukxnr2',                  # Not used with sqlite3.
+        'PASSWORD': '123',                  # Not used with sqlite3.
         'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.
     }
@@ -81,7 +81,7 @@ SECRET_KEY = '3-eel1j2kp4w0c2d&amp;n79n#-ugx5f22#!q1bya-k49d)9*um$6v'
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
+    # 'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -100,7 +100,7 @@ ROOT_URLCONF = 'washings.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi.application'
 
-TEMPLATE_DIRS = ()
+# TEMPLATE_DIRS = ('orders/templates/orders')
 
 INSTALLED_APPS = (
     'django.contrib.auth',

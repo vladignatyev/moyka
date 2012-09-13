@@ -65,13 +65,13 @@ STATIC_ROOT = 'www/static/'
 STATIC_URL = '/static/'
 
 # Additional locations of static files
-STATICFILES_DIRS = ()
+STATICFILES_DIRS = ('/static/')
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
-    # 'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -81,7 +81,7 @@ SECRET_KEY = '3-eel1j2kp4w0c2d&amp;n79n#-ugx5f22#!q1bya-k49d)9*um$6v'
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
+    # 'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -100,7 +100,7 @@ ROOT_URLCONF = 'washings.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi_dev.application'
 
-TEMPLATE_DIRS = ()
+TEMPLATE_DIRS = ('templates/')
 
 INSTALLED_APPS = (
     'django.contrib.auth',

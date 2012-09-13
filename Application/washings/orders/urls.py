@@ -7,8 +7,9 @@ urlpatterns = patterns('',
     url(r'^timegrid/(?P<washing_id>\d+)/bytoday/(?P<today_or_tommorow>\d{1})', 
         'orders.views.get_available_times_for_washing'),
 
+    url(r'^operatordata/byday/(?P<day>\d+)/month/(?P<month>\d+)/year/(?P<year>\d+)/washing/(?P<washing_id>\d+)', 'orders.views.operator_viewmodel'),
+
 	url(r'^orders/add/', 'orders.views.add_order'),
-	url(r'^orders/foruser/', 'orders.views.get_user_order_data'),
 
 	url(r'^jsonp/all/', 'orders.views.get_all_washings_jsonp')
 
