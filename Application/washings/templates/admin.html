@@ -183,7 +183,10 @@
             $('#popup .autono').val('');
             $('#popup .details').val('');
             $('#popup .name').val('');
-            $('#popup .notes').text('');
+            $('#popup .notes').val('');
+
+            $('#popup .timeframe').val(timeframe);
+            $('#popup .postnumber').val(postnumber);
         }
 
         function setPopupDataWithOrder(order)
@@ -202,7 +205,9 @@
                 autono: $('#popup .autono').val(),
                 details: $('#popup .details').val(),
                 name: $('#popup .name').val(),
-                note: $('#popup .notes').val()
+                note: $('#popup .notes').val(),
+                postnumber: $('#popup .postnumber').val(),
+                timeframe: $('#popup .timeframe').val()
             };
             console.log(resultObject);
             return resultObject;
@@ -244,6 +249,8 @@
                     }
                 });
             } else {
+                order.date_time = viewState.selectedDate + ' ' + order.timeframe;
+                order.washing_post_number = order.postnumber;
                 $.post(['/operator/data/create/washing/',washingId].join('')
                 order, 
                 function(data, status){
@@ -271,6 +278,8 @@
     <textarea class="notes"></textarea>
     <div class="buttons">
         <input type="hidden" class="orderId" value="" />
+        <input type="hidden" class="timeframe" value="" />
+        <input type="hidden" class="postnumber" value="" />
         <input type="button" click="deletePopup()" style="float:left;width:70px;"
          class="button cancelbutton" value='Удалить' />
         <input type="button" click="submitPopup()" style="margin-left:6px;float:left;width:70px;"
@@ -295,26 +304,13 @@
                 <h2>{{ washing.title }}</h2>
                 <p class="contacts">{{ washing.address }}</p>
             </div>
-            <div class="calendar" id="datepicker">
-            </div>
-            <div class="admin">
-            </div>
+            <div class="calendar" id="datepicker"></div>
+            <div class="admin"></div>
         </td>
         <td valign="top" id="ordersEditor">
             <div class="head" style="height:60px; border-bottom:1px solid #b0b1b2;"><h1>Таблица постов</h1></div>
-            <div class="header">
-            </div>
-            <div class="orders">
-                <div class="row">
-                    <div class="c">08:00</div>
-                    <div class="c">1 пост</div>
-                    <div class="c">2 пост</div>
-                    <div class="c">3 пост</div>
-                    <div class="c">4 пост</div>
-                    <div class="c">5 пост</div>
-                    <div class="c">08:00</div>
-                </div>
-            </div>
+            <div class="header"></div>
+            <div class="orders"></div>
         </td>
     </table>
 </div>

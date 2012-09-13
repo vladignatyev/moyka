@@ -246,6 +246,57 @@ def add_order(request, default_method='POST'):
 		raise Http404
 
 # @login_required
+def operator_deleteorder(request, order_id):
+	try:
+		order = Order.objects.get(pk=order_id)
+		order.cancelled = True
+		order.save()
+		return orders.JSONResponse({'result':'ok'})
+	except Order.DoesNotExist:
+		raise Http404
+
+# @login_required
+def operator_updateorder(request, order_id):
+	if request.method != "POST":
+		raise Http404
+	try:
+		order = Order.objects.get(pk=order_id)
+		
+		order.autono = request.POST['autono']
+		order.details = request.POST['details']
+		order.name = request.POST['name']
+		order.note = request.POST['note']
+
+		order.is_created_by_staff = True
+
+		order.save()
+		return orders.JSONResponse({'result':'ok'})
+	except Order.DoesNotExist:
+		raise Http404
+
+# @login_required
+def operator_createorder(request, washing_id):
+	if request.method != "POST":
+		raise Http404
+	try:
+		washing = Washing.objects.get(pk=washing_id)
+		order = Order()
+		order.washing = washing
+		order.phone = 000
+		order.washing_post_number = request.POST['washing_post_number']
+		order.date_time = request.POST['date_time']
+		order.autono = request.POST['autono']
+		order.details = request.POST['details']
+		order.name = request.POST['name']
+		order.note = request.POST['note']
+		order.is_created_by_staff = True
+
+		order.save()
+		return orders.JSONResponse({'result':'ok'})
+	except Washing.DoesNotExist:
+		raise Http404
+
+# @login_required
 def operator_viewmodel(request, day, month, year, washing_id):
 	post_number_query = """
 		SELECT o.*
@@ -274,7 +325,7 @@ def operator_viewmodel(request, day, month, year, washing_id):
 	while time <= washing.end_work_day:
 		timeframes.append(time.strftime('%H:%M'))
 		time = (datetime.combine(datetime.today(), time) + time_delta).time()
-# {"postnumber":1, "datetime": '09:00', "autono": 'Ш432ВБ', "name":'Иван', "note": ''},
+		
 	result_orders = []
 	for order in orders_items:
 		result_orders.append({
