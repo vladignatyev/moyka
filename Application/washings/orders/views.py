@@ -1,4 +1,6 @@
 #!coding:utf-8
+from django.views.decorators.csrf import csrf_protect
+
 from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import views as auth_views
 from django.template import RequestContext
@@ -101,6 +103,7 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 
 
 import copy
+@csrf_protect
 @transaction.commit_manually
 def add_order(request, default_method='POST'):
 	if request.method == default_method:
@@ -325,7 +328,7 @@ def operator_viewmodel(request, day, month, year, washing_id):
 	while time <= washing.end_work_day:
 		timeframes.append(time.strftime('%H:%M'))
 		time = (datetime.combine(datetime.today(), time) + time_delta).time()
-		
+
 	result_orders = []
 	for order in orders_items:
 		result_orders.append({

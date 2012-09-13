@@ -223,7 +223,7 @@
 
         function deleteOrder(order) {
             if (confirm('Вы уверены что хотите удалить этот заказ?')) {
-                $.get(['/operator/data/delete/',order.id].join('')
+                $.get(['/operator/data/delete/',order.id].join(''),
                 {}, 
                 function(data, status){
                     if (status == 'success') {
@@ -238,7 +238,7 @@
 
         function updateOrder(order) {
             if (order.id) {
-                $.post(['/operator/data/update/',order.id].join('')
+                $.post(['/operator/data/update/',order.id].join(''),
                 order, 
                 function(data, status){
                     if (status == 'success') {
@@ -249,9 +249,9 @@
                     }
                 });
             } else {
-                order.date_time = viewState.selectedDate + ' ' + order.timeframe;
+                order.date_time = [viewState.selectedDate[2], viewState.selectedDate[1], viewState.selectedDate[0]].join('-') + ' ' + order.timeframe;
                 order.washing_post_number = order.postnumber;
-                $.post(['/operator/data/create/washing/',washingId].join('')
+                $.post(['/operator/data/create/washing/',washingId].join(''),
                 order, 
                 function(data, status){
                     if (status == 'success') {
