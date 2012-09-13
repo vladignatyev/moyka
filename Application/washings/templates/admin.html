@@ -129,8 +129,15 @@
             $(this).addClass('selected');
 
             pos = $(this).position();
-            x = pos.left;
+            x = parseInt(pos.left) + $(this).width();
+            if (x + $('#popup').width() > $(window).width()) {
+                x = pos.left - $('#popup').width();
+            }
             y = pos.top;
+            
+            if (y + $('#popup').height() > $(window).scrollTop() + $(window).height()) {
+                y = $(window).height() + $(window).scrollTop() - $('#popup').height();
+            }
 
             var id = $(this).data('id');
             if (!id) {
