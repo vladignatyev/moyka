@@ -14,6 +14,7 @@ import orders
 from orders.models import Washing, Order, OrderForm, UserProfile
 from datetime import date, datetime, time, timedelta
 
+@csrf_protect
 def index(request):
 	profile = None
 	if request.user.is_authenticated():
