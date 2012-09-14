@@ -30,7 +30,7 @@ def operator(request, washing_id):
 				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
 		print washing
-		return render_to_response('admin.html', {'washing':washing}, context_instance=RequestContext(request))
+		return render_to_response('admin.html', {'profile':profile, 'washing':washing}, context_instance=RequestContext(request))
 	except Washing.DoesNotExist:
 		raise Http404
 	except AttributeError:

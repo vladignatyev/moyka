@@ -291,7 +291,11 @@
         <ul class="menu">
             <li href="#" class="last"><b><a href="/logout/">Выход</a></b></li>
         </ul>
+        {% if profile.role == 'S' %}
+        <a href="/"><img id="logo" src="{% static "img/logo.png" %}" /></a>
+        {% else %}
         <img id="logo" src="{% static "img/logo.png" %}" />
+        {% endif %}
     </div>
 </div>
 
