@@ -12,7 +12,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'washings',                      # Or path to database file if using sqlite3.
+        'NAME': 'moykainfo_ru',                      # Or path to database file if using sqlite3.
         'USER': 'root',                      # Not used with sqlite3.
         'PASSWORD': 'g1eRQ9ukxnr2',                  # Not used with sqlite3.
         'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -65,7 +65,7 @@ STATIC_ROOT = 'www/static/'
 STATIC_URL = '/static/'
 
 # Additional locations of static files
-STATICFILES_DIRS = ('/static/')
+STATICFILES_DIRS = ('static/',)
 
 # List of finder classes that know how to find static files in
 # various locations.

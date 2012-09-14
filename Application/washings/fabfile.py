@@ -48,6 +48,10 @@ def deploy():
 
         run("./env/bin/python manage.py syncdb")
 
+        run("mkdir -p /home/moykainfo/static")
+        run("mkdir -p /home/moykainfo/templates")
+        put("templates", "/home/moykainfo")
+
         if raw_input('Do you need to reload all data? (YES/no)') == 'YES':
             put("./orders/fixtures/initial.json", "initial.json")
             run("./env/bin/python manage.py loaddata initial.json")

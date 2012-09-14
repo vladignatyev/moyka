@@ -1,3 +1,4 @@
 recursive-include orders/fixtures *
 recursive-include orders/templates *
 recursive-include orders/static *
+recursive-include templates *
