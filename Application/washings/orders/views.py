@@ -104,7 +104,8 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 	from 
 		`orders_washing` as w1
 	where 
-		w1.id not in (
+		w1.is_hidden <> 1
+	and w1.id not in (
 		select w.id as `id`
 		from 
 			`orders_order` as o, `orders_washing` as w
@@ -129,8 +130,9 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 
 			and not o.cancelled
 			and o.washing_id = w.id
-			and o.washing_post_number = w.`washing_posts_count`)
+			and o.washing_post_number = w.`washing_posts_count`
 			AND w.is_hidden <> 1
+			)
 		and
 			TIME('{hours}:{minutes}:00') >= w1.start_work_day 
 		and 
