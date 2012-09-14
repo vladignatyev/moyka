@@ -25,7 +25,7 @@ def package():
 def deploy():
     execute(package)
    
-    app = "dist/moykainfo-0.1.tar.gz"
+    app = "dist/moykainfo-0.9.tar.gz"
 
     with cd(remotepath):
         put("requirements.txt", "requirements.txt")
