@@ -1,5 +1,6 @@
 #!coding:utf-8
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth import login, logout
 
 from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import views as auth_views
@@ -14,14 +15,18 @@ from orders.models import Washing, Order, OrderForm, UserProfile
 from datetime import date, datetime, time, timedelta
 
 def index(request):
-	return render_to_response('index.html', {"MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
+	profile = None
+	if request.user.is_authenticated():
+		profile = request.user.get_profile()
+	return render_to_response('index.html', 
+		{'profile': profile, "MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
 		context_instance=RequestContext(request))
 
 def operator(request, washing_id):
 	try:
 		profile = request.user.get_profile()
 		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
-			if profile.washing.id != washing_id:
+			if profile.washing.id != int(washing_id):
 				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
 		print washing
@@ -31,8 +36,33 @@ def operator(request, washing_id):
 	except AttributeError:
 		raise Http404
 
+from django.contrib.auth import authenticate
+
+@csrf_protect
+def login_view(request):
+	if request.method == 'POST':
+		username = request.POST['username']
+		password = request.POST['password']
+		user = authenticate(username=username, password=password)
+		if user is not None:
+		    if user.is_active:
+		        print "You provided a correct username and password!"
+		        login(request, user)
+		        profile = user.get_profile()
+		        if profile.role == UserProfile.SUPER_ADMIN_ROLE:
+		        	return redirect('/')
+		        elif profile.role == UserProfile.WASHING_ADMIN_ROLE:
+		        	return redirect('/operator/%i' % profile.washing.id)
+		    else:
+		    	print "User is not active"
+	return render_to_response('login.html', context_instance=RequestContext(request))
+
+def logout_view(request):
+	logout(request)
+	return redirect('/')
+
 def get_all_washings_jsonp(request, jsonp_variable='washings_data'):
-	return orders.JSONPResponse(Washing.objects.all(), jsonp_variable)
+	return orders.JSONPResponse(Washing.objects.all().filter(is_hidden__exact=False), jsonp_variable)
 
 def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	washing = Washing.objects.get(pk=washing_id)
@@ -325,7 +355,7 @@ def operator_createorder(request, washing_id):
 def operator_viewmodel(request, day, month, year, washing_id):
 	profile = request.user.get_profile()
 	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
-		if profile.washing.id != washing_id:
+		if profile.washing.id != int(washing_id):
 			raise Http404
 
 	post_number_query = """

@@ -13,7 +13,7 @@
     <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
     <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
-    <title></title>
+    <title>MoykaInfo  Автомойки Тольятти</title>
 
     <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
     <link rel="stylesheet" href="{% static "css/main.css" %}" />
@@ -151,13 +151,24 @@
                 var washing = viewModel[i];
 
                 buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto;">Выбрать эту мойку</button>';
-                // showPopup($("#choosebywashing"), function(){$("#washingslist").show();}); 
+
+                var title = ["<h2>",washing.name,"</h2>"].join('');
+
+                {% if profile.role == 'S' %}
+                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
+                {% elif profile.role == 'W' %}
+                if (washing.id == '{{ profile.washing.id }}') {
+                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
+                }
+                {% endif %}
+                
                 mapView.geoObjects.add(
                     new ymaps.Placemark(
                         [washing.geo[1], washing.geo[0]], 
                         {
                             "washing_id": washing.id, 
-                            balloonContent: ["<h2>",washing.name,"</h2>",
+                            balloonContent: 
+                            [title,
                             "<p class='description'>",washing.description,"</p>",
                             "<p class='address'>",washing.address,"</p>",
                             "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",

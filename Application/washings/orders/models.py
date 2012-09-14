@@ -78,9 +78,6 @@ class UserProfile(models.Model):
 		verbose_name = u"профиль пользователя"
 		verbose_name_plural = u"профили пользователей"
 
-
-AUTH_PROFILE_MODULE = 'orders.models.UserProfile'
-
 def create_user_profile(sender, instance, created, **kwargs):
     # if created:
     # 	try:

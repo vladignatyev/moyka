@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">{% load static %}
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="robots" content="index, follow"/>
+    <meta name="keywords" content="icon design, ios, retina, mac os x, osx, os x"/>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+    <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
+    <script type="text/javascript" src="/washings/jsonp/all/"></script>
+
+    <title>MoykaInfo  Автомойки Тольятти</title>
+
+    <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
+</head>
+<body>
+    <form action="" method="post">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <td>Имя пользователя: </td><td><input type="text" name="username" value="" /></td>
+            </tr>
+            <tr>
+                <td>Пароль: </td><td><input type="text" name="password" value="" /></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Войти" /></td>
+        </table>
+    </form>
+</body>
+</html>
