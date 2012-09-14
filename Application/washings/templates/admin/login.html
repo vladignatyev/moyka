@@ -1,57 +1,48 @@
-{% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
-{% load url from future %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">{% load static %}
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="robots" content="index, follow"/>
+    <meta name="keywords" content="icon design, ios, retina, mac os x, osx, os x"/>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />{% endblock %}
+    <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
+    <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
-{% block bodyclass %}login{% endblock %}
+    <title>MoykaInfo  Автомойки Тольятти</title>
 
-{% block nav-global %}{% endblock %}
+    <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
+    <link rel="stylesheet" href="{% static "css/main.css" %}" />
 
-{% block content_title %}{% endblock %}
+    <style type="text/css">
+    body { background: #0a80d5; }
+    td { color: #f0f1f2;}
+    td input { font-size: 14px; padding:2px; border-radius: 4px;}
+    table { margin:100px auto;}
+    </style>
+</head>
+<body>
+    <form action="{{ app_path }}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="this_is_the_login_form" value="1" />
+        <input type="hidden" name="next" value="{{ next }}" />
+        <table>
+            <tr><td colspan="2" style="text-align:center;"><a href="/"><img src='/static/img/logo.png' /></a></td></tr>
+            <tr>
+                <td>Логин: </td><td><input type="text" name="username" value="" /></td>
+            </tr>
+            <tr>
+                <td>Пароль: </td><td><input type="text" name="password" value="" /></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" class="button" value="Войти" /></td>
+        </table>
+    </form>
+</body>
+</html>
 
-{% block breadcrumbs %}{% endblock %}
-
-{% block content %}
-{% if form.errors and not form.non_field_errors and not form.this_is_the_login_form.errors %}
-<p class="errornote">
-{% blocktrans count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
-</p>
-{% endif %}
-
-{% if form.non_field_errors or form.this_is_the_login_form.errors %}
-{% for error in form.non_field_errors|add:form.this_is_the_login_form.errors %}
-<p class="errornote">
-    {{ error }}
-</p>
-{% endfor %}
-{% endif %}
-
-<div id="content-main">
-<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
-  <div class="form-row">
-    {% if not form.this_is_the_login_form.errors %}{{ form.username.errors }}{% endif %}
-    <label for="id_username" class="required">{% trans 'Username:' %}</label> {{ form.username }}
-  </div>
-  <div class="form-row">
-    {% if not form.this_is_the_login_form.errors %}{{ form.password.errors }}{% endif %}
-    <label for="id_password" class="required">{% trans 'Password:' %}</label> {{ form.password }}
-    <input type="hidden" name="this_is_the_login_form" value="1" />
-    <input type="hidden" name="next" value="{{ next }}" />
-  </div>
-  {% url 'admin_password_reset' as password_reset_url %}
-  {% if password_reset_url %}
-  <div class="password-reset-link">
-    <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
-  </div>
-  {% endif %}
-  <div class="submit-row">
-    <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}" />
-  </div>
-</form>
-
-<script type="text/javascript">
-document.getElementById('id_username').focus()
-</script>
-</div>
-{% endblock %}
