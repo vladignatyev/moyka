@@ -10,7 +10,7 @@ from django.db import transaction
 
 import re
 import orders
-from orders.models import Washing, Order, OrderForm
+from orders.models import Washing, Order, OrderForm, UserProfile
 from datetime import date, datetime, time, timedelta
 
 def index(request):
@@ -19,10 +19,16 @@ def index(request):
 
 def operator(request, washing_id):
 	try:
+		profile = request.user.get_profile()
+		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+			if profile.washing.id != washing_id:
+				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
 		print washing
 		return render_to_response('admin.html', {'washing':washing}, context_instance=RequestContext(request))
 	except Washing.DoesNotExist:
+		raise Http404
+	except AttributeError:
 		raise Http404
 
 def get_all_washings_jsonp(request, jsonp_variable='washings_data'):
@@ -38,6 +44,7 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	WHERE
 		o.washing_id = {washing_id}
 		AND w.id = o.washing_id
+		AND w.is_hidden <> 1
 		AND 
 			o.washing_post_number = {washing_posts_count}
 		AND 
@@ -93,6 +100,7 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 			and not o.cancelled
 			and o.washing_id = w.id
 			and o.washing_post_number = w.`washing_posts_count`)
+			AND w.is_hidden <> 1
 		and
 			TIME('{hours}:{minutes}:00') >= w1.start_work_day 
 		and 
@@ -170,6 +178,7 @@ def add_order(request, default_method='POST'):
 			o.washing_id = {washing_id}
 			AND 
 				w.id = o.washing_id
+			AND w.is_hidden <> 1
 			AND 
 				o.washing_post_number = w.`washing_posts_count`
 			AND 
@@ -217,6 +226,7 @@ def add_order(request, default_method='POST'):
 			o.washing_id = {washing_id}
 			AND 
 				w.id = o.washing_id
+			AND w.is_hidden <> 1
 			AND 
 			CONCAT(DATE(o.date_time), ' ', 
 				ADDTIME(w.start_work_day, 
@@ -248,22 +258,30 @@ def add_order(request, default_method='POST'):
 		transaction.rollback()
 		raise Http404
 
-# @login_required
+@login_required
 def operator_deleteorder(request, order_id):
 	try:
+		profile = request.user.get_profile()
 		order = Order.objects.get(pk=order_id)
+		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+			if profile.washing.id != order.washing.id:
+				raise Http404
 		order.cancelled = True
 		order.save()
 		return orders.JSONResponse({'result':'ok'})
 	except Order.DoesNotExist:
 		raise Http404
 
-# @login_required
+@login_required
 def operator_updateorder(request, order_id):
 	if request.method != "POST":
 		raise Http404
 	try:
+		profile = request.user.get_profile()
 		order = Order.objects.get(pk=order_id)
+		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+			if profile.washing.id != order.washing.id:
+				raise Http404
 		
 		order.autono = request.POST['autono']
 		order.details = request.POST['details']
@@ -277,11 +295,15 @@ def operator_updateorder(request, order_id):
 	except Order.DoesNotExist:
 		raise Http404
 
-# @login_required
+@login_required
 def operator_createorder(request, washing_id):
 	if request.method != "POST":
 		raise Http404
 	try:
+		profile = request.user.get_profile()
+		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+			if profile.washing.id != washing_id:
+				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
 		order = Order()
 		order.washing = washing
@@ -299,8 +321,13 @@ def operator_createorder(request, washing_id):
 	except Washing.DoesNotExist:
 		raise Http404
 
-# @login_required
+@login_required
 def operator_viewmodel(request, day, month, year, washing_id):
+	profile = request.user.get_profile()
+	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+		if profile.washing.id != washing_id:
+			raise Http404
+
 	post_number_query = """
 		SELECT o.*
 		FROM
@@ -308,6 +335,7 @@ def operator_viewmodel(request, day, month, year, washing_id):
 			`orders_washing` as w
 		WHERE
 			o.washing_id = w.id
+			AND w.is_hidden <> 1
 			AND
 				w.id = {washing_id}
 			AND 
