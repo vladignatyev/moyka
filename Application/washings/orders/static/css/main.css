@@ -260,5 +260,8 @@ li:hover .submenu {
 .menu>li>b { font-weight:normal; border-left: 1px solid #1daae5; height:29px; padding:20px 20px 0; margin: 0; 
 	font-size:14px; color: #deeef6; text-shadow: 0px 1px 2px #000; text-decoration:none; display: block; cursor: pointer;}
 
+.menu>li>b a { font-weight:normal;  
+    font-size:14px; color: #deeef6; text-shadow: 0px 1px 2px #000; text-decoration:none; display: block; cursor: pointer;}
+
 .menu>li.last { border-right:none!important; }
 .menu>li.last>b { border-right:none!important; padding:20px 24px 0 20px; }
