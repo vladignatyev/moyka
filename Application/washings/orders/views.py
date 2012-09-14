@@ -332,13 +332,14 @@ def operator_createorder(request, washing_id):
 	try:
 		profile = request.user.get_profile()
 		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
-			if profile.washing.id != washing_id:
+			if profile.washing.id != int(washing_id):
 				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
 		order = Order()
 		order.washing = washing
 		order.phone = 000
 		order.washing_post_number = request.POST['washing_post_number']
+		print request.POST['washing_post_number']
 		order.date_time = request.POST['date_time']
 		order.autono = request.POST['autono']
 		order.details = request.POST['details']

@@ -99,24 +99,16 @@
                     }
                 }
 
-                function sortByPostNumber (a, b) {
-                    if (b.postnumber > a.postnumber) return -1;
-                    if (b.postnumber < a.postnumber) return 1;
-                    return 0;
-                }
-
-                ordersForTime.sort(sortByPostNumber);
-
                 rowHtml = '<div class="row"><div class="c">' + time + '</div>';
-                for (var j = 0; j < viewState.postEnd - viewState.postStart + 1; j++) {
-                    content = '';
-                    if (j < ordersForTime.length) {
-                        order = ordersForTime[j];
-                        content = order.autono;
-                        rowHtml += '<div data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + content + '</div>';
-                    } else
-                    rowHtml += '<div data-timeframe="' + time + '" data-postnumber="' + (j+viewState.postStart) + '" class="c"></div>';
+                rowgrid = [];
+                for (var j = viewState.postStart; j<=viewState.postEnd; j++) {
+                    rowgrid.push('<div data-timeframe="' + time + '" data-postnumber="' + j + '" class="c"></div>');
                 }
+                for (var k = 0; k < ordersForTime.length;k++) {
+                    order = ordersForTime[k];
+                    rowgrid[order.postnumber-viewState.postStart] = '<div data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + order.autono + '</div>';
+                }
+                rowHtml += rowgrid.join('');
                 rowHtml += '<div class="c">' + time + '</div></div>';
                 $(".orders").append(rowHtml);
             }
