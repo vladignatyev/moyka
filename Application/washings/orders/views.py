@@ -143,6 +143,19 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 	return orders.JSONModelResponse(Washing.objects.raw(query))
 
 
+def is_matches_timegrid(time_to_test_str, time_start, time_end, time_delta, is_round_the_clock=False):
+	time = time_start
+	time_delta = timedelta(minutes=time_delta)
+	timegrid_matches = False
+	while time <= time_end:
+		if str(time) == time_to_test_str:
+			timegrid_matches = True
+			break
+		time = (datetime.combine(datetime.today(), time) + time_delta).time()
+
+	return timegrid_matches
+
+
 import copy
 @csrf_protect
 @transaction.commit_manually
@@ -161,16 +174,19 @@ def add_order(request, default_method='POST'):
 			unique_order_test = Order.objects.filter(csrfmiddlewaretoken=request.REQUEST['csrfmiddlewaretoken'])
 			if len(list(unique_order_test)):
 				print u"Already created!"
+				transaction.rollback()
 				return orders.JSONResponse({'error': 'alreadycreated', 'details':unique_order_test[0].id}) # occupied :(
 		except Order.DoesNotExist:
 			pass
 		except:
 			print u"Already created!"
+			transaction.rollback()
 			raise Http404	
 
 
 		if not re.match(r'^\d\d:\d\d$', request.REQUEST['date_time']):
 			print "malware time"
+			transaction.rollback()
 			raise Http404
 
 		today = date.today() 
@@ -178,6 +194,7 @@ def add_order(request, default_method='POST'):
 		today_or_tommorow = request.REQUEST.get('tomorrow', None)
 		if today_or_tommorow is None:
 			print "today_or_tommorow is None"
+			transaction.rollback()
 			raise Http404
 
 		if today_or_tommorow == 1:
@@ -188,19 +205,16 @@ def add_order(request, default_method='POST'):
 
 		# test if time matches timegrid of washing
 		timegrid_matches = False
-		time = time_start = washing.start_work_day
-		time_delta = timedelta(minutes=washing.timeframe_minutes)
-		while time <= washing.end_work_day:
-			if str(time) == request.REQUEST['date_time'] + ':00':
-				timegrid_matches = True
-				break
-			time = (datetime.combine(datetime.today(), time) + time_delta).time()
 
-		if not timegrid_matches:
+		#todo здесь для поддержки круглосуточности сетку надо строить немного по-другому
+		if not is_matches_timegrid(request.REQUEST['date_time'] + ':00', 
+			washing.start_work_day, washing.end_work_day, washing.timeframe_minutes, 
+			washing.is_round_the_clock):
 			print "time doesn't match timegrid"
 			transaction.rollback()
 			raise Http404
 
+		# todo выбираем просто заказы и подсчитываем колиество заказов на данное время, если равно washing_post_number — время занято
 		# test if time has already occupied
 		query = """
 		SELECT o.*
@@ -211,9 +225,8 @@ def add_order(request, default_method='POST'):
 			o.washing_id = {washing_id}
 			AND 
 				w.id = o.washing_id
+			AND o.cancelled = 0
 			AND w.is_hidden <> 1
-			AND 
-				o.washing_post_number = w.`washing_posts_count`
 			AND 
 			CONCAT(DATE(o.date_time), ' ', 
 				ADDTIME(w.start_work_day, 
@@ -227,7 +240,7 @@ def add_order(request, default_method='POST'):
 			date_time_str=date_time_str)
 
 		occupied_orders = Order.objects.raw(query)
-		if len(list(occupied_orders)) > 0:
+		if len(list(occupied_orders)) == washing.washing_posts_count:
 			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
 
@@ -257,6 +270,7 @@ def add_order(request, default_method='POST'):
 			`orders_washing` as w
 		WHERE
 			o.washing_id = {washing_id}
+			AND o.cancelled = 0
 			AND 
 				w.id = o.washing_id
 			AND w.is_hidden <> 1
@@ -268,21 +282,34 @@ def add_order(request, default_method='POST'):
 			CONCAT(DATE(o.date_time), ' ', 
 				ADDTIME(w.start_work_day, 
 					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME('{date_time_str}'), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)))
-		ORDER BY o.washing_post_number DESC;
+						TIMEDIFF(TIME('{date_time_str}'), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)));
 		""".format(washing_id=washing.id,
 			date_time_str=date_time_str)
 		orders_by_time = Order.objects.raw(post_number_query)
+
 		if not len(list(orders_by_time)):
 			new_order.washing_post_number = 1
 		else:
-			for order_by_time in orders_by_time: # todo вот тут косяк
-				if order_by_time.washing_post_number + 1 <= washing.washing_posts_count:
-					new_order.washing_post_number = order_by_time.washing_post_number + 1
+
+			occupied_posts = [False for x in range(1, washing.washing_posts_count + 1)]
+			
+			for order_by_time in orders_by_time: 
+				occupied_posts[order_by_time.washing_post_number - 1] = True
+
+			washing_post_number_for_order = None
+
+			print occupied_posts
+			
+			for i in range(0, len(occupied_posts)):
+				if not occupied_posts[i]:
+					washing_post_number_for_order = i + 1
 					break
-				else:
-					transaction.rollback()
-					return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
+
+			if not washing_post_number_for_order:
+				transaction.rollback()
+				return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
+
+			new_order.washing_post_number = washing_post_number_for_order
 				
 		new_order.save()
 		transaction.commit()
