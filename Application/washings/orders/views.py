@@ -276,7 +276,7 @@ def add_order(request, default_method='POST'):
 		if not len(list(orders_by_time)):
 			new_order.washing_post_number = 1
 		else:
-			for order_by_time in orders_by_time:
+			for order_by_time in orders_by_time: # todo вот тут косяк
 				if order_by_time.washing_post_number + 1 <= washing.washing_posts_count:
 					new_order.washing_post_number = order_by_time.washing_post_number + 1
 					break

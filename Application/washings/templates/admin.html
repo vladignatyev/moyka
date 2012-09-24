@@ -20,9 +20,29 @@
     <title>Управление заказами</title>
 
     <script type="text/javascript">
+        var _lockUpdate = false;
+
+        function lockUpdate()
+        {
+            if (!_lockUpdate) {
+                _lockUpdate = true;
+                return true;
+            }
+        }
+
+        function unlockUpdate()
+        {
+            _lockUpdate = false;
+        }
+
         function init() {
             setupDatepicker();
             retrieveData();
+            autoUpdate();
+        }
+
+        function autoUpdate() {
+            setInterval(retrieveData, 2000);
         }
 
         function setupDatepicker() {
@@ -43,6 +63,7 @@
         }
 
         function retrieveData() {
+            if (!lockUpdate()) return;
             $.get(['/operator/data/byday/',viewState.selectedDate[0],
                 '/month/',viewState.selectedDate[1],
                 '/year/',viewState.selectedDate[2],
@@ -53,6 +74,7 @@
                         viewModel = data.result;
                         updateView();
                     } 
+                    unlockUpdate();
                 });
         }
 
@@ -161,9 +183,11 @@
         function hidePopup() {
             $('#popup').hide();
             hideSelection();
+            unlockUpdate();
         }
 
         function showUpdatePopup(order, x, y) {
+            lockUpdate();
             $('#popup').show();
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -173,6 +197,7 @@
         }
 
         function showCreatePopup(timeframe, postnumber, x, y) {
+            lockUpdate();
             $('#popup').show();   
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -221,6 +246,7 @@
         }
 
         function deleteOrder(order) {
+            lockUpdate();
             if (confirm('Вы уверены что хотите удалить этот заказ?')) {
                 $.get(['/operator/data/delete/',order.id].join(''),
                 {}, 
@@ -231,11 +257,13 @@
                     } else {
                         alert('Не удалось удалить выбранный заказ. Повторите попытку!');
                     }
+                    unlockUpdate();
                 });
             }
         }
 
         function updateOrder(order) {
+            lockUpdate();
             if (order.id) {
                 $.post(['/operator/data/update/',order.id].join(''),
                 order, 
@@ -246,6 +274,7 @@
                     } else {
                         alert('Не удалось изменить выбранный заказ. Повторите попытку!');
                     }
+                    unlockUpdate();
                 });
             } else {
                 order.date_time = [viewState.selectedDate[2], viewState.selectedDate[1], viewState.selectedDate[0]].join('-') + ' ' + order.timeframe;
@@ -259,6 +288,7 @@
                     } else {
                         alert('Не удалось создать заказ. Повторите попытку!');
                     }
+                    unlockUpdate();
                 });
             }
         }
