@@ -27,6 +27,47 @@
 {% endif %}
 
 {% block content %}<div id="content-main">
+
+<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+<script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
+<script type="text/javascript">
+var washingLat;
+var washingLon;
+
+function init()
+{
+  washingLat = $('#ymap').data('lat');
+  washingLon = $('#ymap').data('lon');
+
+  mapView = new ymaps.Map('ymap', {
+      center: [washingLat, washingLon],
+      zoom: 12,
+      behaviors: ['default', 'scrollZoom']
+  });
+
+  mapView.controls.add('zoomControl', {right: '40px', top: '40px'});
+  placemark = new ymaps.Placemark(
+      [washingLat, washingLon], 
+      { hintContent: 'Потяните за эту метку, чтобы изменить географическое положение мойки' }, 
+      { draggable: true }
+      );
+
+  mapView.geoObjects.add(placemark);
+
+  function updateGeoData () {
+      var coordinates = placemark.geometry.getBounds()[0];
+      $("#ymap-input-lat").val(coordinates[0]);
+      $("#ymap-input-lon").val(coordinates[1]);
+  }
+
+  placemark.events.add(['dragend'], updateGeoData);
+}
+
+ymaps.ready(init);
+</script>
+
+
+
 {% block object-tools %}
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
@@ -51,7 +92,7 @@
 {% block field_sets %}
 
 {% for fieldset in adminform %}
-  {% include "admin/includes/fieldset.html" %}
+  {% include "admin/orders/washing/washing_fieldset.html" %}
 {% endfor %}
 {% endblock %}
 
