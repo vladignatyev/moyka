@@ -60,6 +60,8 @@ function init()
       $("#ymap-input-lon").val(coordinates[1]);
   }
 
+  updateGeoData();
+  
   placemark.events.add(['dragend'], updateGeoData);
 }
 
