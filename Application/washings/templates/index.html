@@ -162,6 +162,9 @@
                 }
                 {% endif %}
                 
+                timerange = washing.is_round_the_clock? 'Круглосуточно':[formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join('');
+                time = ["<p class='time'>",timerange,"</p>"].join('');
+
                 mapView.geoObjects.add(
                     new ymaps.Placemark(
                         [washing.geo[1], washing.geo[0]], 
@@ -171,10 +174,10 @@
                             [title,
                             "<p class='description'>",washing.description,"</p>",
                             "<p class='address'>",washing.address,"</p>",
-                            "<p class='time'>",formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day),"</p>",
+                            time,
                             buttonsContent
                             ].join(''),
-                            hintContent: ['<b>', washing.name, "</b><br/>", formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join(''),
+                            hintContent: ['<b>', washing.name, "</b><br/>", timerange].join(''),
                             iconContent: ""
                         }, 
                         { 
@@ -345,6 +348,7 @@
             var list = [];
             for (var i in viewData) {
                 var fields = viewData[i].fields;
+
                 list.push({
                     "id": viewData[i].pk,
                     "address":fields.address, 
@@ -352,7 +356,8 @@
                     "description":fields.description, 
                     "geo": [fields.geo_lon, fields.geo_lat],
                     "start_work_day": fields.start_work_day,
-                    "end_work_day": fields.end_work_day
+                    "end_work_day": fields.end_work_day,
+                    "is_round_the_clock": fields.is_round_the_clock
                 });
             }
             return list;

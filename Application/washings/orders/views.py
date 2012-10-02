@@ -86,19 +86,31 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 
 	available_times = []
 
-	time = time_start = washing.start_work_day
+	if not washing.is_round_the_clock:
+		t = washing.start_work_day
+		endtime = washing.end_work_day
+	else:
+		t = time(hour=0, minute=0, second=0)
+		endtime = time(hour=23, minute=59, second=59)
+
+	orders_objects = Order.objects.raw(query)
+
 	time_delta = timedelta(minutes=washing.timeframe_minutes)
-	while time <= washing.end_work_day:
+	while t <= endtime:
 		free = 1
-		for order in Order.objects.raw(query):
-			if datetime.combine(order.date_time, time) <= order.date_time < datetime.combine(order.date_time, time) + time_delta:
+		for order in orders_objects:
+			if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
 				free = 0
 
-		available_times.append({'time': str(time), 'available': free})
-		time = (datetime.combine(datetime.today(), time) + time_delta).time()
+		available_times.append({'time': str(t), 'available': free})
+		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
+		if new_t < t: # round the clock exceed!
+			break
+		t = new_t
 
 	return orders.JSONResponse(available_times)
 
+# todo подкорректировать алгоритм определения занятости мойки
 def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 	query = """
 	select *	
@@ -134,26 +146,32 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 			and o.washing_post_number = w.`washing_posts_count`
 			AND w.is_hidden <> 1
 			)
-		and
-			TIME('{hours}:{minutes}:00') >= w1.start_work_day 
-		and 
-			TIME('{hours}:{minutes}:00') < w1.end_work_day
+		and (TIME('{hours}:{minutes}:00') >= w1.start_work_day 
+		and TIME('{hours}:{minutes}:00') < w1.end_work_day
+		or w1.is_round_the_clock = 1)
 	;	
 	""".format(hours=hours, minutes=minutes, tommorow=today_or_tommorow)
 	return orders.JSONModelResponse(Washing.objects.raw(query))
 
 
 def is_matches_timegrid(time_to_test_str, time_start, time_end, time_delta, is_round_the_clock=False):
-	time = time_start
-	time_delta = timedelta(minutes=time_delta)
-	timegrid_matches = False
-	while time <= time_end:
-		if str(time) == time_to_test_str:
-			timegrid_matches = True
-			break
-		time = (datetime.combine(datetime.today(), time) + time_delta).time()
+	if not is_round_the_clock:
+		t = time_start
+		endtime = time_end
+	else:
+		t = time(hour=0, minute=0, second=0)
+		endtime = time(hour=23, minute=59, second=59)
 
-	return timegrid_matches
+	time_delta = timedelta(minutes=time_delta)
+	while t <= endtime:
+		if str(t) == time_to_test_str:
+			return True
+		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
+		if new_t < t: # round the clock exceed!
+			break
+		t = new_t
+
+	return False
 
 
 import copy
@@ -399,10 +417,12 @@ def operator_viewmodel(request, day, month, year, washing_id):
 			AND w.is_hidden <> 1
 			AND
 				w.id = {washing_id}
-			AND 
+			AND
+			(
 				o.date_time >= CONCAT('{year}-{month}-{day}', ' ', w.`start_work_day`)
-			AND 
-				o.date_time <= CONCAT('{year}-{month}-{day}', ' ', w.`end_work_day`)
+				AND o.date_time <= CONCAT('{year}-{month}-{day}', ' ', w.`end_work_day`)
+				OR w.is_round_the_clock = 1
+			)
 			AND 
 				o.cancelled = 0
 		ORDER BY o.washing_post_number DESC;
@@ -412,11 +432,27 @@ def operator_viewmodel(request, day, month, year, washing_id):
 	washing = Washing.objects.get(pk=washing_id)
 
 	timeframes = []
-	time = time_start = washing.start_work_day
+
+	if not washing.is_round_the_clock:
+		t = washing.start_work_day
+		endtime = washing.end_work_day
+	else:
+		t = time(hour=0, minute=0, second=0)
+		endtime = time(hour=23, minute=59, second=59)
+
+
 	time_delta = timedelta(minutes=washing.timeframe_minutes)
-	while time <= washing.end_work_day:
-		timeframes.append(time.strftime('%H:%M'))
-		time = (datetime.combine(datetime.today(), time) + time_delta).time()
+	while t <= endtime:
+		free = 1
+		for order in orders_items:
+			if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
+				free = 0
+
+		timeframes.append(t.strftime('%H:%M'))
+		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
+		if new_t < t: # round the clock exceed!
+			break
+		t = new_t
 
 	result_orders = []
 	for order in orders_items:
