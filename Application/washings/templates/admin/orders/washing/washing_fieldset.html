@@ -12,8 +12,16 @@
                 {% if field.field.name == 'geo_lon' %}
                 <div id="ymap" style="width:100%; height:300px;" data-lon="{{ field.field.value }}"{% elif field.field.name == 'geo_lat' %} data-lat="{{ field.field.value }}"></div>
 
-                 <input type="text" id="ymap-input-lat" name="geo_lat" /> 
-                 <input type="text" id="ymap-input-lon" name="geo_lon" /> 
+                <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}">
+                    <div>
+                        <label for="ymap-input-lon">Сев. широта</label>
+                        <input type="text" id="ymap-input-lon" name="geo_lon" /> 
+                    </div>
+                    <div>
+                        <label for="ymap-input-lat">Вост. долгота</label>
+                        <input type="text" id="ymap-input-lat" name="geo_lat" /> 
+                    </div>
+                </div>
 
                 {% else %}
                 <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% for field in line %}{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% endfor %}">
