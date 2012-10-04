@@ -36,8 +36,8 @@ var washingLon;
 
 function init()
 {
-  washingLat = $('#ymap').data('lat');
-  washingLon = $('#ymap').data('lon');
+  washingLat = $('#ymap').data('lat') == 'None'? 53.511311 : $('#ymap').data('lat');
+  washingLon = $('#ymap').data('lon') == 'None'? 49.418084 : $('#ymap').data('lon');
 
   mapView = new ymaps.Map('ymap', {
       center: [washingLat, washingLon],

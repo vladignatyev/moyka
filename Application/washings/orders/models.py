@@ -16,8 +16,8 @@ class Washing(models.Model):
 	start_work_day = models.TimeField()
 	end_work_day = models.TimeField()
 	is_round_the_clock = models.BooleanField(blank=False, verbose_name=u'Мойка работает круглосуточно?')
-	timeframe_minutes = models.IntegerField()
-	washing_posts_count = models.IntegerField()
+	timeframe_minutes = models.IntegerField(verbose_name=u'Интервал сетки расписания, мин.')
+	washing_posts_count = models.IntegerField(verbose_name=u'Количество моечных постов')
 	is_hidden = models.BooleanField(default=True)
 
 	def __unicode__(self):
