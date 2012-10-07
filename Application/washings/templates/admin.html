@@ -109,6 +109,8 @@
                 return;
             }
                 
+            $('#ordersEditor .header').css('width', ((viewState.postEnd - viewState.postStart + 1) * 103 + 2*98) + 'px');
+
             for (var t in viewModel.timeframes_stamp) {
                 time = viewModel.timeframes_stamp[t];
                 ordersForTime = [];
@@ -329,7 +331,7 @@
     </div>
 </div>
 
-<div style="overflow:hidden; border: 1px solid #8e91a0; border-radius: 5px; max-width: 960px; margin:0 auto; height:645px; margin-top:80px; box-shadow:0px 2px 2px rgba(0,0,0,0.3);">
+<div style="overflow:hidden; overflow-x:scroll; border: 1px solid #8e91a0; border-radius: 5px; max-width: 960px; margin:0 auto; height:645px; margin-top:80px; box-shadow:0px 2px 2px rgba(0,0,0,0.3);">
     <table id="editor" cellspacing="0" cellpadding="0">
         <tr>
         <td valign="top" id="calendarPanel" style="border-right:1px solid #b0b1b2;">
