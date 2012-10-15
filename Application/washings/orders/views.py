@@ -78,10 +78,11 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 		AND w.is_hidden <> 1
 		AND 
 			o.washing_post_number = {washing_posts_count}
-		AND 
+		AND (
 			o.date_time >= DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY)
-		AND
-			o.date_time < DATE_ADD(DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY), INTERVAL 1 DAY);
+			AND o.date_time < DATE_ADD(DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY), INTERVAL 1 DAY)
+			OR w.is_round_the_clock = 1
+		);
 	""".format(washing_id=washing_id, tomorrow=today_or_tommorow, washing_posts_count=washing.washing_posts_count)
 
 	available_times = []
@@ -96,7 +97,7 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	orders_objects = Order.objects.raw(query)
 
 	time_delta = timedelta(minutes=washing.timeframe_minutes)
-	while t <= endtime:
+	while True:
 		free = 1
 		for order in orders_objects:
 			if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
@@ -104,7 +105,10 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 
 		available_times.append({'time': str(t), 'available': free})
 		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
-		if new_t < t: # round the clock exceed!
+		if washing.is_round_the_clock:
+			if new_t < t: # round the clock exceed!
+				break
+		if t == endtime:
 			break
 		t = new_t
 
@@ -155,23 +159,40 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 
 
 def is_matches_timegrid(time_to_test_str, time_start, time_end, time_delta, is_round_the_clock=False):
-	if not is_round_the_clock:
-		t = time_start
-		endtime = time_end
-	else:
-		t = time(hour=0, minute=0, second=0)
-		endtime = time(hour=23, minute=59, second=59)
 
+	# if not washing.is_round_the_clock:
+	# 	t = washing.start_work_day
+	# 	endtime = washing.end_work_day
+	# else:
+	# 	t = time(hour=0, minute=0, second=0)
+	# 	endtime = time(hour=23, minute=59, second=59)
+
+	# orders_objects = Order.objects.raw(query)
+
+	# time_delta = timedelta(minutes=washing.timeframe_minutes)
+	# while t <= endtime:
+	# 	free = 1
+	# 	for order in orders_objects:
+	# 		if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
+	# 			free = 0
+
+	# 	available_times.append({'time': str(t), 'available': free})
+	# 	new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
+	# 	if new_t < t: # round the clock exceed!
+	# 		break
+	# 	t = new_t
+
+
+	time = time_start
 	time_delta = timedelta(minutes=time_delta)
-	while t <= endtime:
-		if str(t) == time_to_test_str:
-			return True
-		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
-		if new_t < t: # round the clock exceed!
+	timegrid_matches = False
+	while time <= time_end:
+		if str(time) == time_to_test_str:
+			timegrid_matches = True
 			break
-		t = new_t
+		time = (datetime.combine(datetime.today(), time) + time_delta).time()
 
-	return False
+	return timegrid_matches
 
 
 import copy

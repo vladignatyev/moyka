@@ -42,10 +42,12 @@ function init()
   mapView = new ymaps.Map('ymap', {
       center: [washingLat, washingLon],
       zoom: 12,
+      type:'yandex#hybrid',
       behaviors: ['default', 'scrollZoom']
   });
 
   mapView.controls.add('zoomControl', {right: '40px', top: '40px'});
+  mapView.controls.add('typeSelector');
   placemark = new ymaps.Placemark(
       [washingLat, washingLon], 
       { hintContent: 'Потяните за эту метку, чтобы изменить географическое положение мойки' }, 
