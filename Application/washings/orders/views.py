@@ -14,6 +14,14 @@ import orders
 from orders.models import Washing, Order, OrderForm, UserProfile
 from datetime import date, datetime, time, timedelta
 
+from utils import TimeGrid, format_dt
+from django.contrib.auth import authenticate
+
+
+def _timeobj_from_request_string(string):
+	hours, minutes = string.split(':')
+	return time(hour=int(hours), minute=int(minutes))
+
 @csrf_protect
 def index(request):
 	profile = None
@@ -36,8 +44,6 @@ def operator(request, washing_id):
 		raise Http404
 	except AttributeError:
 		raise Http404
-
-from django.contrib.auth import authenticate
 
 @csrf_protect
 def login_view(request):
@@ -63,54 +69,37 @@ def logout_view(request):
 	return redirect('/')
 
 def get_all_washings_jsonp(request, jsonp_variable='washings_data'):
-	return orders.JSONPResponse(Washing.objects.all().filter(is_hidden__exact=False), jsonp_variable)
+	washings = Washing.objects.all().filter(is_hidden__exact=False)
+	return orders.JSONPResponse(washings, jsonp_variable)
 
 def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	washing = Washing.objects.get(pk=washing_id)
-	query = """
-	SELECT o.*
-	FROM
-		`orders_order` as o,
-		`orders_washing` as w
-	WHERE
-		o.washing_id = {washing_id}
-		AND w.id = o.washing_id
-		AND w.is_hidden <> 1
-		AND 
-			o.washing_post_number = {washing_posts_count}
-		AND (
-			o.date_time >= DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY)
-			AND o.date_time < DATE_ADD(DATE_ADD(CONCAT(CURRENT_DATE, ' ', w.`start_work_day`), INTERVAL {tomorrow} DAY), INTERVAL 1 DAY)
-			OR w.is_round_the_clock = 1
-		);
-	""".format(washing_id=washing_id, tomorrow=today_or_tommorow, washing_posts_count=washing.washing_posts_count)
+	timegrid = TimeGrid(washing.start_work_day, washing.end_work_day,\
+	 washing.timeframe_minutes, today_or_tommorow == '1')
 
+	dt_start = str(timegrid.grid[0])
+	dt_end = str(timegrid.grid[len(timegrid.grid)-1])
+
+	from django.db import connection, transaction
+	cursor = connection.cursor()
+	cursor.execute("""SELECT o.date_time, COUNT(*) >= w.`washing_posts_count` 
+    	FROM orders_order as o, orders_washing as w 
+    	WHERE o.cancelled = 0 AND o.washing_id=w.id AND w.id=%s AND w.`is_hidden`=0 
+    	AND o.date_time >= %s AND o.date_time <= %s
+    	GROUP BY o.date_time""", 
+    	[washing_id, dt_start, dt_end])
+    
+	occupied_times = cursor.fetchall()
+	print occupied_times
 	available_times = []
 
-	if not washing.is_round_the_clock:
-		t = washing.start_work_day
-		endtime = washing.end_work_day
-	else:
-		t = time(hour=0, minute=0, second=0)
-		endtime = time(hour=23, minute=59, second=59)
+	for tick in timegrid.grid:
+		is_occupied = False
+		for (occupied_time, occupied) in occupied_times:
+			if occupied_time == tick and occupied == 1:
+				is_occupied = True
 
-	orders_objects = Order.objects.raw(query)
-
-	time_delta = timedelta(minutes=washing.timeframe_minutes)
-	while True:
-		free = 1
-		for order in orders_objects:
-			if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
-				free = 0
-
-		available_times.append({'time': str(t), 'available': free})
-		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
-		if washing.is_round_the_clock:
-			if new_t < t: # round the clock exceed!
-				break
-		if t == endtime:
-			break
-		t = new_t
+		available_times.append({'time': format_dt(tick), 'available': int(is_occupied)})
 
 	return orders.JSONResponse(available_times)
 
@@ -156,44 +145,6 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 	;	
 	""".format(hours=hours, minutes=minutes, tommorow=today_or_tommorow)
 	return orders.JSONModelResponse(Washing.objects.raw(query))
-
-
-def is_matches_timegrid(time_to_test_str, time_start, time_end, time_delta, is_round_the_clock=False):
-
-	# if not washing.is_round_the_clock:
-	# 	t = washing.start_work_day
-	# 	endtime = washing.end_work_day
-	# else:
-	# 	t = time(hour=0, minute=0, second=0)
-	# 	endtime = time(hour=23, minute=59, second=59)
-
-	# orders_objects = Order.objects.raw(query)
-
-	# time_delta = timedelta(minutes=washing.timeframe_minutes)
-	# while t <= endtime:
-	# 	free = 1
-	# 	for order in orders_objects:
-	# 		if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
-	# 			free = 0
-
-	# 	available_times.append({'time': str(t), 'available': free})
-	# 	new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
-	# 	if new_t < t: # round the clock exceed!
-	# 		break
-	# 	t = new_t
-
-
-	time = time_start
-	time_delta = timedelta(minutes=time_delta)
-	timegrid_matches = False
-	while time <= time_end:
-		if str(time) == time_to_test_str:
-			timegrid_matches = True
-			break
-		time = (datetime.combine(datetime.today(), time) + time_delta).time()
-
-	return timegrid_matches
-
 
 import copy
 @csrf_protect
@@ -242,13 +193,11 @@ def add_order(request, default_method='POST'):
 
 		date_time_str = u"%s %s:00" % (str(today), request.REQUEST['date_time'])
 
-		# test if time matches timegrid of washing
-		timegrid_matches = False
 
-		#todo здесь для поддержки круглосуточности сетку надо строить немного по-другому
-		if not is_matches_timegrid(request.REQUEST['date_time'] + ':00', 
-			washing.start_work_day, washing.end_work_day, washing.timeframe_minutes, 
-			washing.is_round_the_clock):
+		timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
+	
+		t_obj = _timeobj_from_request_string(request.REQUEST['date_time'])
+		if not timegrid.match(t_obj):
 			print "time doesn't match timegrid"
 			transaction.rollback()
 			raise Http404
@@ -386,10 +335,9 @@ def operator_updateorder(request, order_id):
 		order.details = request.POST['details']
 		order.name = request.POST['name']
 		order.note = request.POST['note']
-
 		order.is_created_by_staff = True
-
 		order.save()
+
 		return orders.JSONResponse({'result':'ok'})
 	except Order.DoesNotExist:
 		raise Http404
@@ -404,19 +352,19 @@ def operator_createorder(request, washing_id):
 			if profile.washing.id != int(washing_id):
 				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
+
 		order = Order()
 		order.washing = washing
 		order.phone = 000
 		order.washing_post_number = request.POST['washing_post_number']
-		print request.POST['washing_post_number']
 		order.date_time = request.POST['date_time']
 		order.autono = request.POST['autono']
 		order.details = request.POST['details']
 		order.name = request.POST['name']
 		order.note = request.POST['note']
 		order.is_created_by_staff = True
-
 		order.save()
+
 		return orders.JSONResponse({'result':'ok'})
 	except Washing.DoesNotExist:
 		raise Http404
@@ -451,29 +399,7 @@ def operator_viewmodel(request, day, month, year, washing_id):
 	orders_items = Order.objects.raw(post_number_query)
 	
 	washing = Washing.objects.get(pk=washing_id)
-
-	timeframes = []
-
-	if not washing.is_round_the_clock:
-		t = washing.start_work_day
-		endtime = washing.end_work_day
-	else:
-		t = time(hour=0, minute=0, second=0)
-		endtime = time(hour=23, minute=59, second=59)
-
-
-	time_delta = timedelta(minutes=washing.timeframe_minutes)
-	while t <= endtime:
-		free = 1
-		for order in orders_items:
-			if datetime.combine(order.date_time, t) <= order.date_time < datetime.combine(order.date_time, t) + time_delta:
-				free = 0
-
-		timeframes.append(t.strftime('%H:%M'))
-		new_t = (datetime.combine(datetime.today(), t) + time_delta).time()
-		if new_t < t: # round the clock exceed!
-			break
-		t = new_t
+	timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
 
 	result_orders = []
 	for order in orders_items:
@@ -484,4 +410,5 @@ def operator_viewmodel(request, day, month, year, washing_id):
 			'details':order.details, 'is_created_by_staff':order.is_created_by_staff, 'autobrand':order.autobrand,
 			'phone':order.phone})
 
-	return orders.JSONResponse({'timeframes_stamp':timeframes, 'timeframes':result_orders}) 
+	return orders.JSONResponse({'timeframes_stamp':timegrid.stringified(), 
+		'timeframes':result_orders}) 
