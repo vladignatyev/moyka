@@ -91,14 +91,14 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
     
 	occupied_times = cursor.fetchall()
 	available_times = []
-
+	print occupied_times
 	for tick in timegrid.grid:
 		is_occupied = False
 		for (occupied_time, occupied) in occupied_times:
 			if occupied_time == tick and occupied == 1:
 				is_occupied = True
 
-		available_times.append({'time': format_dt(tick), 'available': int(is_occupied)})
+		available_times.append({'time': format_dt(tick), 'available': int(not is_occupied)})
 
 	return orders.JSONResponse(available_times)
 
@@ -189,7 +189,7 @@ def add_order(request, default_method='POST'):
 			`orders_order` as o,
 			`orders_washing` as w
 		WHERE
-			o.washing_id = {washing_id}
+			o.washing_id = %s
 			AND 
 				w.id = o.washing_id
 			AND o.cancelled = 0
@@ -202,11 +202,10 @@ def add_order(request, default_method='POST'):
 			CONCAT(DATE(o.date_time), ' ', 
 				ADDTIME(w.start_work_day, 
 					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME('{date_time_str}'), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)))
-		""".format(washing_id=washing.id,
-			date_time_str=date_time_str)
+						TIMEDIFF(TIME(%s), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)))
+		"""
 
-		occupied_orders = Order.objects.raw(query)
+		occupied_orders = Order.objects.raw(query, [washing.id, date_time_str])
 		if len(list(occupied_orders)) == washing.washing_posts_count:
 			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
@@ -236,7 +235,7 @@ def add_order(request, default_method='POST'):
 			`orders_order` as o,
 			`orders_washing` as w
 		WHERE
-			o.washing_id = {washing_id}
+			o.washing_id = %s
 			AND o.cancelled = 0
 			AND 
 				w.id = o.washing_id
@@ -249,10 +248,9 @@ def add_order(request, default_method='POST'):
 			CONCAT(DATE(o.date_time), ' ', 
 				ADDTIME(w.start_work_day, 
 					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME('{date_time_str}'), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)));
-		""".format(washing_id=washing.id,
-			date_time_str=date_time_str)
-		orders_by_time = Order.objects.raw(post_number_query)
+						TIMEDIFF(TIME(%s), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)));
+		"""
+		orders_by_time = Order.objects.raw(post_number_query, [washing.id, date_time_str])
 
 		if not len(list(orders_by_time)):
 			new_order.washing_post_number = 1
@@ -364,18 +362,20 @@ def operator_viewmodel(request, day, month, year, washing_id):
 			o.washing_id = w.id
 			AND w.is_hidden <> 1
 			AND
-				w.id = {washing_id}
+				w.id = %s
 			AND
 			(
-				o.date_time >= CONCAT('{year}-{month}-{day}', ' ', w.`start_work_day`)
-				AND o.date_time <= CONCAT('{year}-{month}-{day}', ' ', w.`end_work_day`)
+				o.date_time >= CONCAT(%s, ' ', w.`start_work_day`)
+				AND o.date_time <= CONCAT(%s, ' ', w.`end_work_day`)
 				OR w.is_round_the_clock = 1
 			)
 			AND 
 				o.cancelled = 0
 		ORDER BY o.washing_post_number DESC;
-		""".format(washing_id=washing_id, year=year, month=month, day=day)
-	orders_items = Order.objects.raw(post_number_query)
+		"""
+
+	ymd = '%s-%s-%s' % (year, month, day)
+	orders_items = Order.objects.raw(post_number_query, [washing_id, ymd, ymd])
 	
 	washing = Washing.objects.get(pk=washing_id)
 	timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
