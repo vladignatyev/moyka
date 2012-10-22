@@ -90,7 +90,6 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
     	[washing_id, dt_start, dt_end])
     
 	occupied_times = cursor.fetchall()
-	print occupied_times
 	available_times = []
 
 	for tick in timegrid.grid:
@@ -105,46 +104,26 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 
 # todo подкорректировать алгоритм определения занятости мойки
 def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
+	now = datetime.now()
+	if today_or_tommorow == '1':
+		now = now + timedelta(days=1)
+	order_time = time(hour=int(hours), minute=int(minutes))
+	order_dt = datetime.combine(now, order_time)
+
 	query = """
-	select *	
-	from 
-		`orders_washing` as w1
-	where 
-		w1.is_hidden <> 1
-	and w1.id not in (
-		select w.id as `id`
-		from 
-			`orders_order` as o, `orders_washing` as w
-		where 
-			o.date_time >= CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL {tommorow} DAY),' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(
-						ROUND(
-							TIME_TO_SEC(
-								TIMEDIFF('{hours}:{minutes}:00', w.start_work_day)
-								) / 60 / w.`timeframe_minutes`) * 60 * w.`timeframe_minutes`)))
-
-			and o.date_time >= CURRENT_DATE()
-			and o.date_time < DATE_ADD(CONCAT(DATE_ADD(CURRENT_DATE(), INTERVAL {tommorow} DAY),' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(
-						ROUND(
-							TIME_TO_SEC(
-								TIMEDIFF('{hours}:{minutes}:00', w.start_work_day)
-								) / 60 / w.`timeframe_minutes`) * 60 * w.`timeframe_minutes`))), 
-				INTERVAL w.timeframe_minutes MINUTE)
-
-			and not o.cancelled
-			and o.washing_id = w.id
-			and o.washing_post_number = w.`washing_posts_count`
-			AND w.is_hidden <> 1
-			)
-		and (TIME('{hours}:{minutes}:00') >= w1.start_work_day 
-		and TIME('{hours}:{minutes}:00') < w1.end_work_day
-		or w1.is_round_the_clock = 1)
-	;	
-	""".format(hours=hours, minutes=minutes, tommorow=today_or_tommorow)
-	return orders.JSONModelResponse(Washing.objects.raw(query))
+    	SELECT * FROM orders_washing AS w1
+ WHERE w1.id NOT IN (SELECT id FROM (SELECT w.id, COUNT(*) >= w.`washing_posts_count` as occupied
+    	FROM orders_order as o, orders_washing as w 
+    	WHERE o.cancelled <> 1 AND o.washing_id=w.id 
+    	AND o.date_time = %s
+    	GROUP BY o.date_time) as ow WHERE ow.occupied=1) 
+    	AND w1.is_hidden = 0 AND (
+    	     (w1.end_work_day < w1.start_work_day AND (w1.end_work_day >= %s OR w1.start_work_day <= %s))
+    	     OR (w1.start_work_day <= %s AND w1.end_work_day >= %s));
+    	"""
+	# 
+	print query
+	return orders.JSONModelResponse(Washing.objects.raw(query, [order_dt, order_time, order_time, order_time, order_time]))
 
 import copy
 @csrf_protect
