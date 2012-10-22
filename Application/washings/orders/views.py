@@ -38,7 +38,6 @@ def operator(request, washing_id):
 			if profile.washing.id != int(washing_id):
 				raise Http404
 		washing = Washing.objects.get(pk=washing_id)
-		print washing
 		return render_to_response('admin.html', {'profile':profile, 'washing':washing}, context_instance=RequestContext(request))
 	except Washing.DoesNotExist:
 		raise Http404
@@ -91,7 +90,7 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
     
 	occupied_times = cursor.fetchall()
 	available_times = []
-	print occupied_times
+
 	for tick in timegrid.grid:
 		is_occupied = False
 		for (occupied_time, occupied) in occupied_times:
@@ -121,8 +120,7 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
     	     (w1.end_work_day < w1.start_work_day AND (w1.end_work_day >= %s OR w1.start_work_day <= %s))
     	     OR (w1.start_work_day <= %s AND w1.end_work_day >= %s));
     	"""
-	# 
-	print query
+
 	return orders.JSONModelResponse(Washing.objects.raw(query, [order_dt, order_time, order_time, order_time, order_time]))
 
 import copy
@@ -262,8 +260,6 @@ def add_order(request, default_method='POST'):
 				occupied_posts[order_by_time.washing_post_number - 1] = True
 
 			washing_post_number_for_order = None
-
-			print occupied_posts
 			
 			for i in range(0, len(occupied_posts)):
 				if not occupied_posts[i]:
