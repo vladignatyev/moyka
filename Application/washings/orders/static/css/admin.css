@@ -99,8 +99,9 @@ li:hover .submenu {
     clear:both;
 }
 #ordersEditor .orders {
-    height: 538px;
+    height: 512px;
     overflow: scroll;
+    padding-bottom: 100px;
 }
 #ordersEditor .orders .c {
     width: 100px;
