@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">{% load static %}
+<title>Отчетность за период</title>
+<link rel="stylesheet" href="{% static "css/admin/jqueryui/ui-lightness/jquery-ui-1.8.23.custom.css" %}" />
+<link rel="stylesheet" href="{% static "css/admin/jqueryui/flick/jquery-ui-1.8.23.custom.css" %}" />
+<link rel="stylesheet" href="{% static "css/fonts.css" %}" />
+<link rel="stylesheet" href="{% static "css/admin.css" %}" />
+
+<script type="text/javascript" src="{% static "js/admin/jquery-1.8.0.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/admin/jquery-ui-1.8.23.custom.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/admin/jquery.ui.datepicker-ru.js" %}"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    $("#createReport").click(function(){
+        openReportPage();
+    });
+    $( "#from" ).datepicker({
+            changeMonth: true,
+            numberOfMonths: 3,
+            onSelect: function( selectedDate ) {
+                $( "#to" ).datepicker( "option", "minDate", selectedDate );
+            }
+        });
+    $( "#to" ).datepicker({
+        defaultDate: "+1m",
+        changeMonth: true,
+        numberOfMonths: 3,
+        onSelect: function( selectedDate ) {
+            $( "#from" ).datepicker( "option", "maxDate", selectedDate );
+        }
+    });
+});
+
+function openReportPage()
+{
+    from = $('#from').val();
+    to = $('#to').val();
+
+    day1 = from.split('.')[0];
+    month1 = from.split('.')[1];
+    year1 = from.split('.')[2];
+
+    day2 = to.split('.')[0];
+    month2 = to.split('.')[1];
+    year2 = to.split('.')[2];
+
+    document.location.href = '/washings/orders/report/forwashing/{{ washing.id }}/byyear/' + year1 +'/month/' + month1 + '/day/' + day1 + '/year2/' + year2 + '/month2/' + month2 + '/day2/' + day2 + '/';
+}
+</script>
+<style type="text/css">
+    body {
+        padding-left:20px;
+        background:none;
+    }
+
+    table tr {
+
+    }
+    table tr td, table tr th {
+        padding:5px;
+    }
+    table tr th { 
+        height:30px;
+    }
+</style>
+</head>
+<body>
+<h1>Заказы за период</h1>
+с <input type="text" id="from" value="{{ date_start|date:"d.m.Y" }}" /> по
+<input type="text" id="to" value="{{ date_end|date:"d.m.Y" }}" />
+<input type="submit" id="createReport" value="Новый отчет" />
+
+<h2>{{ washing.title }}</h2>
+<table id="report" cellspacing="0" cellpadding="0" border="1">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Назначенное время</th>
+            <th>Дата создания заказа</th>
+            <th>Телефон клиента</th>
+            <th>Номер автомобиля</th>
+            <th>Моечный пост</th>
+            <th>Заказ создан через сайт?</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.date_time|date:"d.m.Y H:i:s" }}</td>
+            <td>{{ order.added_date|date:"d.m.Y H:i:s" }}</td>
+            <td>{{ order.phone }}</td>
+            <td>{{ order.autono }}</td>
+            <td>{{ order.washing_post_number }}</td>
+            <td>{% if not order.is_created_by_staff %}да{% else %}нет{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<p>Всего заказов за период: {{ orders.count }}</p>
+
+</body>
+</html>

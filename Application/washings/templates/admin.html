@@ -39,6 +39,7 @@
             setupDatepicker();
             retrieveData();
             autoUpdate();
+            $("#reportButton").click(openReportPage);
         }
 
         function autoUpdate() {
@@ -295,6 +296,23 @@
             }
         }
 
+        function openReportPage(e)
+        {
+            now = new Date();
+            nowPlusMonth = new Date(Date.now() + 1E3 * 3600 * 24 * 31);
+
+            day1 = '01';
+            month1 = now.getMonth() + 1;
+            year1 = now.getFullYear();
+
+
+            day2 = day1;
+            month2 = nowPlusMonth.getMonth() + 1;
+            year2 = nowPlusMonth.getFullYear();
+
+            document.location.href = '/washings/orders/report/forwashing/{{ washing.id }}/byyear/' + year1 +'/month/' + month1 + '/day/' + day1 + '/year2/' + year2 + '/month2/' + month2 + '/day2/' + day2 + '/';
+        }
+
         $(document).ready(init);
     </script>
 </head>
@@ -341,6 +359,7 @@
             </div>
             <div class="calendar" id="datepicker"></div>
             <div class="admin"></div>
+            <input id="reportButton" type="button" style="margin:20px auto; width:150px;" class="button okbutton" value="Сформировать отчет" />
         </td>
         <td valign="top" id="ordersEditor">
             <div class="head" style="height:60px; border-bottom:1px solid #b0b1b2;"><h1>Таблица постов</h1></div>

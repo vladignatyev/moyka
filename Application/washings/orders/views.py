@@ -343,6 +343,25 @@ def operator_createorder(request, washing_id):
 		raise Http404
 
 @login_required
+def operator_report(request, day1, month1, year1, day2, month2, year2, washing_id):
+	profile = request.user.get_profile()
+	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+		if profile.washing.id != int(washing_id):
+			raise Http404
+
+	dt_start = datetime(year=int(year1), month=int(month1), day=int(day1))
+	dt_end = datetime(year=int(year2), month=int(month2), day=int(day2))
+
+	washing = Washing.objects.get(pk=washing_id)
+	orders = Order.objects.filter(washing=washing, added_date__gte=dt_start).exclude(added_date__gt=dt_end).order_by('id')
+
+	return render_to_response('report.html', {'washing':washing, 'orders':orders, 
+		'date_start':dt_start, 'date_end':dt_end}, 
+		context_instance=RequestContext(request))
+
+
+
+@login_required
 def operator_viewmodel(request, day, month, year, washing_id):
 	profile = request.user.get_profile()
 	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
