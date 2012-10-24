@@ -4,8 +4,8 @@ from django.contrib.auth import login, logout
 
 from django.shortcuts import render_to_response, redirect
 from django.contrib.auth import views as auth_views
-from django.template import RequestContext
-from django.http import Http404
+from django.template import RequestContext, loader, Context
+from django.http import Http404, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 
@@ -358,6 +358,55 @@ def operator_report(request, day1, month1, year1, day2, month2, year2, washing_i
 	return render_to_response('report.html', {'washing':washing, 'orders':orders, 
 		'date_start':dt_start, 'date_end':dt_end}, 
 		context_instance=RequestContext(request))
+
+import unicodecsv
+from cStringIO import StringIO
+from django.core.servers.basehttp import FileWrapper
+@login_required
+def operator_report_csv(request, day1, month1, year1, day2, month2, year2, washing_id):
+	profile = request.user.get_profile()
+	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+		if profile.washing.id != int(washing_id):
+			raise Http404
+
+	dt_start = datetime(year=int(year1), month=int(month1), day=int(day1))
+	dt_end = datetime(year=int(year2), month=int(month2), day=int(day2))
+
+	washing = Washing.objects.get(pk=washing_id)
+	orders = Order.objects.filter(washing=washing, added_date__gte=dt_start).exclude(added_date__gt=dt_end).order_by('id')
+
+	f = StringIO()
+	w = unicodecsv.writer(f, encoding='utf-8', delimiter=';')
+	
+	w.writerow((u'№№ п/п', u'Назначенное время', u'Дата создания заказа', \
+    	u'Имя клиента', u'Телефон клиента', u'E-mail клиента', \
+    	u'Номер автомобиля', u'Моечный пост',u'Заказ создан через сайт?'))
+
+	i = 1
+	for order in orders:
+		yesno = u'нет'
+		if order.is_created_by_staff:
+			yesno = u'да'
+
+		w.writerow((i, order.date_time, order.added_date, order.name, order.phone, order.email, order.autono, order.washing_post_number, yesno))
+		i+=1
+
+	f.seek(0)
+
+	t = loader.get_template('report_csv.txt')
+	c = Context({'content': f.read()})
+	response = HttpResponse(t.render(c), mimetype='text/csv')
+	response['Content-Disposition'] = 'attachment; filename=report.csv'
+	return response
+
+
+	# return render_to_response('report_csv.txt', {'content':f.read()}, 
+	# 	context_instance=RequestContext(request), mimetype='text/csv')
+
+
+	# response = HttpResponse(f, mimetype='text/csv')
+	# response['Content-Disposition'] = 'attachment; filename=report.csv'
+	# return response
 
 
 

@@ -7,5 +7,6 @@ urlpatterns = patterns('',
         'orders.views.get_available_times_for_washing'),
 	url(r'^orders/add/', 'orders.views.add_order'),
 	url(r'^jsonp/all/', 'orders.views.get_all_washings_jsonp'),
-    url(r'^orders/report/forwashing/(?P<washing_id>\d+)/byyear/(?P<year1>\d+)/month/(?P<month1>\d+)/day/(?P<day1>\d+)/year2/(?P<year2>\d+)/month2/(?P<month2>\d+)/day2/(?P<day2>\d+)/', 'orders.views.operator_report'),
+    url(r'^orders/report/forwashing/(?P<washing_id>\d+)/byyear/(?P<year1>\d+)/month/(?P<month1>\d+)/day/(?P<day1>\d+)/year2/(?P<year2>\d+)/month2/(?P<month2>\d+)/day2/(?P<day2>\d+)/$', 'orders.views.operator_report'),
+    url(r'^orders/report/forwashing/(?P<washing_id>\d+)/byyear/(?P<year1>\d+)/month/(?P<month1>\d+)/day/(?P<day1>\d+)/year2/(?P<year2>\d+)/month2/(?P<month2>\d+)/day2/(?P<day2>\d+)/csv/', 'orders.views.operator_report_csv'),
 )

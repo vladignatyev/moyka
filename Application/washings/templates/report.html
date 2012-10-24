@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{% static "css/admin.css" %}" />
 
 <script type="text/javascript" src="{% static "js/admin/jquery-1.8.0.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/jquery.dataTables.min.js" %}"></script>
 <script type="text/javascript" src="{% static "js/admin/jquery-ui-1.8.23.custom.min.js" %}"></script>
 <script type="text/javascript" src="{% static "js/admin/jquery.ui.datepicker-ru.js" %}"></script>
 
@@ -29,8 +30,31 @@ $(document).ready(function(){
         numberOfMonths: 3,
         onSelect: function( selectedDate ) {
             $( "#from" ).datepicker( "option", "maxDate", selectedDate );
-        }
+        },
+        
     });
+
+    $('#report').dataTable({
+        "bPaginate": false,
+        "bLengthChange": false,
+        "bFilter": true,
+        "bSort": true,
+        "bInfo": false,
+        "bAutoWidth": false,
+        "bJQueryUI": true,
+        "oLanguage": {
+            "oAria":{
+                "sSortAscending":"Упорядочить по возрастанию",
+                "sSortDescending":"Упорядочить по убыванию",
+            },
+            "sSearch": "Найти",
+            "sLengthMenu": "Отображать _MENU_ записей на странице",
+            "sZeroRecords": "Ничего не найдено.",
+            "sInfo": "Отображается с _START_ по _END_ ищ _TOTAL_ записей",
+            "sInfoEmpty": "Нет записей",
+            "sInfoFiltered": "(filtered from _MAX_ total records)"
+        }
+    } );
 });
 
 function openReportPage()
@@ -53,7 +77,11 @@ function openReportPage()
     body {
         padding-left:20px;
         background:none;
+        font-size: 14px;
     }
+
+    h1 {line-height: 40px;}
+
 
     table tr {
 
@@ -61,25 +89,56 @@ function openReportPage()
     table tr td, table tr th {
         padding:5px;
     }
-    table tr th { 
-        height:30px;
+
+    th .ui-icon {
+        float:right;
+    }
+    th {
+        cursor:pointer;
+    }
+
+    th.sorting {
+        text-decoration: underline;
+        cursor:pointer;
+    }
+
+    th.sorting_asc {
+        cursor: pointer;
+    }
+    th.sorting_desc {
+        cursor: pointer;
+    }
+    .dataTables_filter {
+        padding:10px 10px 10px 0;
+    }
+    .dataTables_filter input {
+        width:300px;
+    }
+    h2 { text-align: center; }
+    .DataTables_sort_wrapper {
+        font-weight: normal !important;
+        color: #000 !important;
     }
 </style>
 </head>
 <body>
-<h1>Заказы за период</h1>
-с <input type="text" id="from" value="{{ date_start|date:"d.m.Y" }}" /> по
+    <center>
+<h1>Заказы</h1>
+<h2>Автомойки «{{ washing.title }}»</h2>
+ за период с <input type="text" id="from" value="{{ date_start|date:"d.m.Y" }}" /> по
 <input type="text" id="to" value="{{ date_end|date:"d.m.Y" }}" />
 <input type="submit" id="createReport" value="Новый отчет" />
+</center>
 
-<h2>{{ washing.title }}</h2>
-<table id="report" cellspacing="0" cellpadding="0" border="1">
+<table id="report" cellspacing="0" cellpadding="0" border="1" bordercolor="#ccc">
     <thead>
         <tr>
             <th>#</th>
             <th>Назначенное время</th>
             <th>Дата создания заказа</th>
+            <th>Имя клиента</th>
             <th>Телефон клиента</th>
+            <th>E-mail клиента</th>
             <th>Номер автомобиля</th>
             <th>Моечный пост</th>
             <th>Заказ создан через сайт?</th>
@@ -88,10 +147,12 @@ function openReportPage()
     <tbody>
     {% for order in orders %}
         <tr>
-            <td>{{ order.id }}</td>
+            <td>{{ forloop.counter }}</td>
             <td>{{ order.date_time|date:"d.m.Y H:i:s" }}</td>
             <td>{{ order.added_date|date:"d.m.Y H:i:s" }}</td>
+            <td>{{ order.name }}</td>
             <td>{{ order.phone }}</td>
+            <td>{{ order.email }}</td>
             <td>{{ order.autono }}</td>
             <td>{{ order.washing_post_number }}</td>
             <td>{% if not order.is_created_by_staff %}да{% else %}нет{% endif %}</td>
@@ -101,6 +162,6 @@ function openReportPage()
 </table>
 
 <p>Всего заказов за период: {{ orders.count }}</p>
-
+<a href="csv/">Сохранить в формате .csv</a>
 </body>
 </html>
