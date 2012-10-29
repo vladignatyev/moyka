@@ -97,7 +97,11 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 			if occupied_time == tick and occupied == 1:
 				is_occupied = True
 
-		available_times.append({'time': format_dt(tick), 'available': int(not is_occupied)})
+		is_timed_out = False
+
+		print tick
+
+		available_times.append({'time': format_dt(tick), 'timedout':is_timed_out,  'available': int(not is_occupied)})
 
 	return orders.JSONResponse(available_times)
 
@@ -376,7 +380,8 @@ def operator_report_csv(request, day1, month1, year1, day2, month2, year2, washi
 	orders = Order.objects.filter(washing=washing, added_date__gte=dt_start).exclude(added_date__gt=dt_end).order_by('id')
 
 	f = StringIO()
-	w = unicodecsv.writer(f, encoding='utf-8', delimiter=';')
+	w = unicodecsv.writer(f, encoding='utf-8', delimiter=";")
+	f.write('\xEF\xBB\xBF\x61')
 	
 	w.writerow((u'№№ п/п', u'Назначенное время', u'Дата создания заказа', \
     	u'Имя клиента', u'Телефон клиента', u'E-mail клиента', \
