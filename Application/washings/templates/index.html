@@ -160,6 +160,9 @@
             mapView.controls.add('zoomControl');
             mapView.controls.add('typeSelector');
 
+            var trafficControl = new ymaps.control.TrafficControl({shown: true});
+            mapView.controls.add(trafficControl, {bottom: 100, left: 10});
+
             viewModel = parseViewData(washings_data);
             updateMapView();
             updateListView();
