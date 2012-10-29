@@ -246,6 +246,11 @@
                     selectedClass = 'selected';
                 }
 
+                if (timegridItem.timedout) {
+                    timegridItem.available = false;
+                    selectedClass = 'timedout';
+                }
+
                 $("#timeselection").append('<li class="' + selectedClass + '"><a ' + (timegridItem.available == 1?'class ="'+ selectedClass + '"':'class="disabled ' + selectedClass + '"') 
                     + 'href="javascript:;" data-hours="' + timegridItem.time.split(':')[0] + 
                     '" data-minutes="' + timegridItem.time.split(':')[1] + '">' + formatTime(timegridItem.time) + '</a></li>');

@@ -91,15 +91,16 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	occupied_times = cursor.fetchall()
 	available_times = []
 
+	now = datetime.now()
+	print now
+
 	for tick in timegrid.grid:
 		is_occupied = False
 		for (occupied_time, occupied) in occupied_times:
 			if occupied_time == tick and occupied == 1:
 				is_occupied = True
 
-		is_timed_out = False
-
-		print tick
+		is_timed_out = tick < now
 
 		available_times.append({'time': format_dt(tick), 'timedout':is_timed_out,  'available': int(not is_occupied)})
 
@@ -178,6 +179,13 @@ def add_order(request, default_method='POST'):
 		timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
 	
 		t_obj = _timeobj_from_request_string(request.REQUEST['date_time'])
+
+		order_time = datetime.combine(today, t_obj)
+		if order_time < datetime.now():
+			print "time has expired"
+			transaction.rollback()
+			raise Http404
+
 		if not timegrid.match(t_obj):
 			print "time doesn't match timegrid"
 			transaction.rollback()

@@ -147,6 +147,7 @@ button.disabled, .button.disabled {
 #freewashings li em { color: #0165d5; font-style:italic; font-size:12px;}
 #freewashings li.selected { background: url('/static/img/selected_free_carwashing_item.png') 0px 5px no-repeat; }
 #freewashings li.selected a { border:none; color: #02428a; font-weight:bolder;}
+
 #freewashings li.selected em { color: #02428a; }
 
 #choosetimepopup .leftsidebar h4 {
@@ -222,6 +223,7 @@ button.disabled, .button.disabled {
 #timeselection li { display: block; float:left; height:30px; width:80px;}
 #timeselection li a { text-align:right; font-size:14px; color: #037500; text-decoration:none; border-bottom:1px dotted #037500; }
 #timeselection li a.disabled { font-size:14px; color:#9d0c0c; border:0; font-weight:bolder; }
+#timeselection li a.timedout { font-size:14px; color:#333 !important; border:0; font-weight:bolder; }
 #timeselection li a.selected { background: #1c85c6 !important; color:#fff !important; font-weight:bolder; }
 
 .menu { padding:0; margin:0; list-style-type:none; }
