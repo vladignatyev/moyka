@@ -13,12 +13,13 @@ class Washing(models.Model):
 	
 	description = models.TextField(blank=True, verbose_name=u'Описание')
 	address = models.TextField(blank=True, verbose_name=u'Адрес')
-	start_work_day = models.TimeField()
-	end_work_day = models.TimeField()
+	start_work_day = models.TimeField(verbose_name=u'Начало рабочего дня')
+	end_work_day = models.TimeField(verbose_name=u'Конец рабочего дня автомойки')
 	is_round_the_clock = models.BooleanField(blank=False, verbose_name=u'Мойка работает круглосуточно?')
 	timeframe_minutes = models.IntegerField(verbose_name=u'Интервал сетки расписания, мин.')
 	washing_posts_count = models.IntegerField(verbose_name=u'Количество моечных постов')
-	is_hidden = models.BooleanField(default=True)
+	is_hidden = models.BooleanField(verbose_name=u'Мойка скрыта?', default=True)
+	is_enabled = models.BooleanField(verbose_name=u'На мойку можно записаться?', default=False)
 
 	def __unicode__(self):
 		return u"%s — %s" % (self.title, self.address)

@@ -181,8 +181,10 @@
             
             for (var i in viewModel) {
                 var washing = viewModel[i];
-
-                buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto;">Выбрать эту мойку</button>';
+                buttonsContent = '';
+                if (washing.is_enabled) {
+                    buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto;">Выбрать эту мойку</button>';
+                }
 
                 var title = ["<h2>",washing.name,"</h2>"].join('');
 
@@ -195,7 +197,10 @@
                 {% endif %}
                 
                 timerange = washing.is_round_the_clock? 'Круглосуточно':[formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join('');
-                time = ["<p class='time'>",timerange,"</p>"].join('');
+                time = '';
+                // if (washing.is_enabled) {
+                    time = ["<p class='time'>",timerange,"</p>"].join('');
+                // }
 
                 mapView.geoObjects.add(
                     new ymaps.Placemark(
@@ -394,7 +399,8 @@
                     "geo": [fields.geo_lon, fields.geo_lat],
                     "start_work_day": fields.start_work_day,
                     "end_work_day": fields.end_work_day,
-                    "is_round_the_clock": fields.is_round_the_clock
+                    "is_round_the_clock": fields.is_round_the_clock,
+                    "is_enabled": fields.is_enabled
                 });
             }
             return list;
