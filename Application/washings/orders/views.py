@@ -11,7 +11,7 @@ from django.db import transaction
 
 import re
 import orders
-from orders.models import Washing, Order, OrderForm, UserProfile
+from orders.models import Washing, Order, OrderForm, UserProfile, SiteSettings
 from datetime import date, datetime, time, timedelta
 
 from utils import TimeGrid, format_dt
@@ -27,8 +27,17 @@ def index(request):
 	profile = None
 	if request.user.is_authenticated():
 		profile = request.user.get_profile()
+
+	site_settings = None
+	try:
+		site_settings = SiteSettings.objects.order_by('-update_date')[0]
+	except IndexError:
+		site_settings = SiteSettings()
+		site_settings.save()
+
 	return render_to_response('index.html', 
-		{'profile': profile, "MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
+		{'profile': profile, 'site_settings': site_settings,
+		"MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
 		context_instance=RequestContext(request))
 
 def operator(request, washing_id):

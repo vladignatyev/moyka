@@ -78,13 +78,22 @@ class UserProfile(models.Model):
 		verbose_name = u"профиль пользователя"
 		verbose_name_plural = u"профили пользователей"
 
-def create_user_profile(sender, instance, created, **kwargs):
-    # if created:
-    # 	try:
-    # 		profile = UserProfile.objects.get(user=instance)
-    # 	except UserProfile.DoesNotExist:
-    #     	UserProfile.objects.create(user=instance)
-    pass
+class SiteSettings(models.Model):
+	update_date = models.DateTimeField(verbose_name=u'Дата создания группы параметров', auto_now=True, editable=False)
 
-post_save.connect(create_user_profile, sender=User)  
+	contact_email = models.EmailField(verbose_name=u'Контактный email внизу страницы', editable=True, default='moykainfo@gmail.com')
+	twitter = models.CharField(verbose_name=u'Ссылка на Твиттер', editable=True, max_length=255, default='https://twitter.com/krasnovma83')
+	vkontakte = models.CharField(verbose_name=u'Ссылка Вконтакте', editable=True, max_length=255, default='http://vk.com/club43277490')
+	facebook = models.CharField(verbose_name=u'Ссылка на Фэйсбук', editable=True, max_length=255, default='http://www.facebook.com/groups/110673112422240/')
 
+	show_twitter = models.BooleanField(verbose_name=u'Показывать Твиттер?', default=True)
+	show_vkontakte = models.BooleanField(verbose_name=u'Показывать Вконтакте?', default=True)
+	show_facebook = models.BooleanField(verbose_name=u'Показывать Фэйсбук?', default=True)
+	show_email = models.BooleanField(verbose_name=u'Показывать контактный email?', default=True)
+
+	def __unicode__(self):
+		return u"Параметры от %s" % self.update_date
+
+	class Meta:
+		verbose_name = u"параметры сайта"
+		verbose_name_plural = u"параметры сайта"

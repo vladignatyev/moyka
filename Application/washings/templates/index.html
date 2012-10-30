@@ -434,10 +434,18 @@
     <div id="footer">
         <div id="footercentered">
             <div class="buttons">
-                <a class="facebook" href="http://www.facebook.com/groups/110673112422240/"></a>
-                <a class="vkontakte" href="http://vk.com/club43277490"></a>
-                <a class="twitter" href="https://twitter.com/krasnovma83"></a>
-                <a href="mailto:moykainfo@gmail.com" class="mail">moykainfo@gmail.com</a>
+                {% if site_settings.show_facebook %}
+                <a class="facebook" href="{{ site_settings.facebook }}"></a>
+                {% endif %}
+                {% if site_settings.show_vkontakte %}
+                <a class="vkontakte" href="{{ site_settings.vkontakte }}"></a>
+                {% endif %}
+                {% if site_settings.show_twitter %}
+                <a class="twitter" href="{{ site_settings.twitter }}"></a>
+                {% endif %}
+                {% if site_settings.show_email %}
+                <a href="mailto:{{ site_settings.contact_email }}" class="mail">{{ site_settings.contact_email }}</a>
+                {% endif %}
             </div>
             <div class="copyright">
                 Мойка инфо<br/>
