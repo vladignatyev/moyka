@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(name = "moykainfo", 
     author="Vladimir Ignatev",
-    version="0.9",
+    version="0.91",
     packages=find_packages(),
     include_package_data=True,
     zip_safe=True,

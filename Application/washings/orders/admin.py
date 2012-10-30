@@ -3,7 +3,7 @@ from django.contrib import admin
 from orders.models import Washing, Order, UserProfile, SiteSettings
 
 admin.site.register(Washing)
-admin.site.register(Order)
+# admin.site.register(Order)
 admin.site.register(UserProfile)
 admin.site.register(SiteSettings)
 

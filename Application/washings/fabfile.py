@@ -25,7 +25,7 @@ def package():
 def deploy():
     execute(package)
    
-    app = "dist/moykainfo-0.9.tar.gz"
+    app = "dist/moykainfo-0.91.tar.gz"
 
     with cd(remotepath):
         put("requirements.txt", "requirements.txt")
@@ -46,16 +46,14 @@ def deploy():
 
         run("chmod 777 manage.py")
 
-        run("./env/bin/python manage.py syncdb")
-
         run("mkdir -p /home/moykainfo/static")
         run("mkdir -p /home/moykainfo/templates")
         put("templates", "/home/moykainfo")
 
         if raw_input('Do you need to reload all data? (YES/no)') == 'YES':
-            put("./orders/fixtures/initial.json", "initial.json")
-            run("./env/bin/python manage.py loaddata initial.json")
-            run("rm initial.json")
+            run("./env/bin/python manage.py syncdb --noinput")
+            # run("./env/bin/python manage.py flush --noinput")
+
         run("./env/bin/python manage.py collectstatic --noinput")
         put("wsgi.py", "wsgi.py")
         run("touch uwsgi.yml")
