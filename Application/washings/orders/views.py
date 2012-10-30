@@ -179,8 +179,7 @@ def add_order(request, default_method='POST'):
 		# если мойка ночная и время ночное, то надо добавить еще 1 день к дате.
 		if washing.end_work_day < washing.start_work_day and t_obj < washing.start_work_day:
 			print "here1"
-			delta_time += timedelta(days=1)
-			today = (datetime.now() + delta_time).date()
+			delta_time = timedelta(days=1)
 
 		# а если записано на завтра то и еще один, то есть в следующую ночь а не в текущую => в сумме +2 дня
 		if today_or_tommorow == '1':
@@ -221,19 +220,12 @@ def add_order(request, default_method='POST'):
 				w.id = o.washing_id
 			AND o.cancelled = 0
 			AND w.is_hidden <> 1
-			AND 
-			CONCAT(DATE(o.date_time), ' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME(o.date_time), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes))) = 
-			CONCAT(DATE(o.date_time), ' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME(%s), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)))
+			AND o.date_time = %s
 		"""
 
 		occupied_orders = Order.objects.raw(query, [washing.id, date_time_str])
 		if len(list(occupied_orders)) == washing.washing_posts_count:
+			print "OCUPIED HERE"
 			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
 
@@ -270,14 +262,7 @@ def add_order(request, default_method='POST'):
 				w.id = o.washing_id
 			AND w.is_hidden <> 1
 			AND 
-			CONCAT(DATE(o.date_time), ' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME(o.date_time), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes))) = 
-			CONCAT(DATE(o.date_time), ' ', 
-				ADDTIME(w.start_work_day, 
-					SEC_TO_TIME(ROUND(TIME_TO_SEC(
-						TIMEDIFF(TIME(%s), w.start_work_day)) / 60 / w.timeframe_minutes) * 60 * w.timeframe_minutes)));
+			o.date_time = %s
 		"""
 		orders_by_time = Order.objects.raw(post_number_query, [washing.id, date_time_str])
 
@@ -285,10 +270,14 @@ def add_order(request, default_method='POST'):
 			new_order.washing_post_number = 1
 		else:
 
+			print orders_by_time
+
 			occupied_posts = [False for x in range(1, washing.washing_posts_count + 1)]
 			
 			for order_by_time in orders_by_time: 
 				occupied_posts[order_by_time.washing_post_number - 1] = True
+
+			print occupied_posts
 
 			washing_post_number_for_order = None
 			
@@ -296,6 +285,8 @@ def add_order(request, default_method='POST'):
 				if not occupied_posts[i]:
 					washing_post_number_for_order = i + 1
 					break
+
+
 
 			if not washing_post_number_for_order:
 				transaction.rollback()
