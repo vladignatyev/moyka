@@ -92,7 +92,6 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 	available_times = []
 
 	now = datetime.now()
-	print now
 
 	for tick in timegrid.grid:
 		is_occupied = False
@@ -101,6 +100,8 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 				is_occupied = True
 
 		is_timed_out = tick < now
+
+		print tick
 
 		available_times.append({'time': format_dt(tick), 'timedout':is_timed_out,  'available': int(not is_occupied)})
 
@@ -169,18 +170,34 @@ def add_order(request, default_method='POST'):
 			transaction.rollback()
 			raise Http404
 
-		if today_or_tommorow == 1:
-			one_day_delta = timedelta(days=1)
-			today = (datetime.now() + dt).date()
+		print today_or_tommorow
+
+		t_obj = _timeobj_from_request_string(request.REQUEST['date_time'])
+
+
+		delta_time = timedelta()
+		# если мойка ночная и время ночное, то надо добавить еще 1 день к дате.
+		if washing.end_work_day < washing.start_work_day and t_obj < washing.start_work_day:
+			print "here1"
+			delta_time += timedelta(days=1)
+			today = (datetime.now() + delta_time).date()
+
+		# а если записано на завтра то и еще один, то есть в следующую ночь а не в текущую => в сумме +2 дня
+		if today_or_tommorow == '1':
+			print "here2"
+			delta_time += timedelta(days=1)
+
+		today = (datetime.now() + delta_time).date()
 
 		date_time_str = u"%s %s:00" % (str(today), request.REQUEST['date_time'])
 
 
 		timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
 	
-		t_obj = _timeobj_from_request_string(request.REQUEST['date_time'])
+		
 
 		order_time = datetime.combine(today, t_obj)
+		print order_time
 		if order_time < datetime.now():
 			print "time has expired"
 			transaction.rollback()
@@ -219,6 +236,8 @@ def add_order(request, default_method='POST'):
 		if len(list(occupied_orders)) == washing.washing_posts_count:
 			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
+
+		print date_time_str
 
 		request_data = {
 			'washing_id': request.REQUEST['washing_id'],
