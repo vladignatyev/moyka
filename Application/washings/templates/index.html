@@ -350,11 +350,11 @@
                         closePopup('#orderForm', 'cancel', null, true);
                         $('#notification .notifyContent').html(
                             [
-                                '<h4>', 'Заказ №', newOrder, ' успешно зарегистрирован!</h4>',
+                                '<h4>', 'Ваш заказ успешно зарегистрирован!</h4>',
                                 '<p>', 'Автомойка «', washingName, '» по адресу «', address, '» на ', 
                                 orderModel.tomorrow?'завтра ' : 'сегодня в&nbsp;', orderModel.formatTime(), 
                                 ' для автомобиля с госномером ', orderModel.carno ,'</p>',
-                                '<p class="msg">','Пожалуйста, запомните номер заказа (' + newOrder + ') и не опаздывайте к назначенному времени!','</p>'
+                                '<p class="msg">Не опаздывайте к назначенному времени!</p>'
                             ].join(''));
                         showPopup($('#notification'));
                     },
