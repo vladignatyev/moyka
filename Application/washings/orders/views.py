@@ -18,6 +18,9 @@ from utils import TimeGrid, format_dt
 from django.contrib.auth import authenticate
 
 
+_TIME_TO_RUN_TO_WASHING_MINUTES = 45
+
+
 def _timeobj_from_request_string(string):
 	hours, minutes = string.split(':')
 	return time(hour=int(hours), minute=int(minutes))
@@ -36,7 +39,8 @@ def index(request):
 		site_settings.save()
 
 	return render_to_response('index.html', 
-		{'profile': profile, 'site_settings': site_settings,
+		{'profile': profile, 'site_settings': site_settings, 'now': datetime.now(), 
+		'time_to_run_delta': _TIME_TO_RUN_TO_WASHING_MINUTES,
 		"MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
 		context_instance=RequestContext(request))
 
@@ -102,15 +106,15 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 
 	now = datetime.now()
 
+	time_to_run_delta = timedelta(minutes=_TIME_TO_RUN_TO_WASHING_MINUTES)
+
 	for tick in timegrid.grid:
 		is_occupied = False
 		for (occupied_time, occupied) in occupied_times:
 			if occupied_time == tick and occupied == 1:
 				is_occupied = True
 
-		is_timed_out = tick < now
-
-		print tick
+		is_timed_out = tick < now + time_to_run_delta
 
 		available_times.append({'time': format_dt(tick), 'timedout':is_timed_out,  'available': int(not is_occupied)})
 

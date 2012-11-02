@@ -15,6 +15,7 @@
     <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
     <title>MoykaInfo  Автомойки Тольятти</title>
+    <!-- {{ now }} -->
 
     <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
     <link rel="stylesheet" href="{% static "css/main.css" %}" />
@@ -141,7 +142,7 @@
 
         function updateOrderTimeAtPanel()
         {
-            mseconds = 6E4 * 45; // 45 minutes
+            mseconds = 6E4 * {{ time_to_run_delta }}; 
             time = new Date(Date.now() + mseconds);
             
             $('#hours').val(normalize10(time.getHours()));

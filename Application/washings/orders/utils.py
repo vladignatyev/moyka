@@ -64,8 +64,6 @@ def assert_equal(case, list1, list2):
 
     for i in range(0, len(list1)-1):
         if list1[i] != list2[i]:
-            print list1[i]
-            print list2[i]
             raise ValueError(case)
 
     return True
