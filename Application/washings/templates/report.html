@@ -142,6 +142,7 @@ function openReportPage()
             <th>Номер автомобиля</th>
             <th>Моечный пост</th>
             <th>Заказ создан через сайт?</th>
+            <th>Заказ удален/отменен?</th>
         </tr>
     </thead>
     <tbody>
@@ -156,6 +157,7 @@ function openReportPage()
             <td>{{ order.autono }}</td>
             <td>{{ order.washing_post_number }}</td>
             <td>{% if not order.is_created_by_staff %}да{% else %}нет{% endif %}</td>
+            <td>{% if not order.cancelled %}да{% else %}нет{% endif %}</td>
         </tr>
     {% endfor %}
     </tbody>

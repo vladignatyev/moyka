@@ -18,7 +18,7 @@ from utils import TimeGrid, format_dt
 from django.contrib.auth import authenticate
 
 
-_TIME_TO_RUN_TO_WASHING_MINUTES = 45
+_TIME_TO_RUN_TO_WASHING_MINUTES = 10
 
 
 def _timeobj_from_request_string(string):
@@ -299,8 +299,6 @@ def add_order(request, default_method='POST'):
 					washing_post_number_for_order = i + 1
 					break
 
-
-
 			if not washing_post_number_for_order:
 				transaction.rollback()
 				return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
@@ -416,7 +414,7 @@ def operator_report_csv(request, day1, month1, year1, day2, month2, year2, washi
 	
 	w.writerow((u'№№ п/п', u'Назначенное время', u'Дата создания заказа', \
     	u'Имя клиента', u'Телефон клиента', u'E-mail клиента', \
-    	u'Номер автомобиля', u'Моечный пост',u'Заказ создан через сайт?'))
+    	u'Номер автомобиля', u'Моечный пост',u'Заказ создан через сайт?', u'Заказ удален?'))
 
 	i = 1
 	for order in orders:
@@ -424,7 +422,11 @@ def operator_report_csv(request, day1, month1, year1, day2, month2, year2, washi
 		if order.is_created_by_staff:
 			yesno = u'да'
 
-		w.writerow((i, order.date_time, order.added_date, order.name, order.phone, order.email, order.autono, order.washing_post_number, yesno))
+		deleted = u'нет'
+		if order.cancelled:
+			deleted = u'да'
+
+		w.writerow((i, order.date_time, order.added_date, order.name, order.phone, order.email, order.autono, order.washing_post_number, yesno, deleted))
 		i+=1
 
 	f.seek(0)
@@ -436,24 +438,12 @@ def operator_report_csv(request, day1, month1, year1, day2, month2, year2, washi
 	return response
 
 
-	# return render_to_response('report_csv.txt', {'content':f.read()}, 
-	# 	context_instance=RequestContext(request), mimetype='text/csv')
-
-
-	# response = HttpResponse(f, mimetype='text/csv')
-	# response['Content-Disposition'] = 'attachment; filename=report.csv'
-	# return response
-
-
-
 @login_required
 def operator_viewmodel(request, day, month, year, washing_id):
 	profile = request.user.get_profile()
 	if profile.role == UserProfile.WASHING_ADMIN_ROLE:
 		if profile.washing.id != int(washing_id):
 			raise Http404
-
-
 
 	post_number_query = """
 		SELECT o.*
@@ -484,12 +474,6 @@ def operator_viewmodel(request, day, month, year, washing_id):
 	print ymd
 	orders_items = Order.objects.raw(post_number_query, [washing_id, ymd, ymd, ymd, ymd])
 	
-	# s = ""
-	# for order in orders_items:
-	# 	s += " " + str(order)
-
-	# raise Exception(s)
-
 	washing = Washing.objects.get(pk=washing_id)
 	timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
 
