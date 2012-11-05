@@ -188,6 +188,7 @@
             $('#popup').hide();
             hideSelection();
             unlockUpdate();
+            retrieveData();
         }
 
         function showUpdatePopup(order, x, y) {
@@ -245,6 +246,7 @@
 
         function submitPopup() {
             updateOrder(grabPopupData());
+            setPopupDataWithOrder(grabPopupData());
         }
 
         function deletePopup() {
