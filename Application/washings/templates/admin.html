@@ -65,10 +65,11 @@
 
         function retrieveData() {
             if (!lockUpdate()) return;
+            rnd = Math.random() * 1E8;
             $.get(['/operator/data/byday/',viewState.selectedDate[0],
                 '/month/',viewState.selectedDate[1],
                 '/year/',viewState.selectedDate[2],
-                '/washing/',washingId].join(''), 
+                '/washing/',washingId,'?rnd=' + rnd].join(''), 
                 {}, 
                 function(data, status){
                     if (status == 'success') {

@@ -453,6 +453,8 @@ def operator_viewmodel(request, day, month, year, washing_id):
 		if profile.washing.id != int(washing_id):
 			raise Http404
 
+
+
 	post_number_query = """
 		SELECT o.*
 		FROM
@@ -465,9 +467,13 @@ def operator_viewmodel(request, day, month, year, washing_id):
 				w.id = %s
 			AND
 			(
-				o.date_time >= CONCAT(%s, ' ', w.`start_work_day`)
-				AND o.date_time <= CONCAT(%s, ' ', w.`end_work_day`)
-				OR w.is_round_the_clock = 1
+				(w.is_round_the_clock <> 1
+				AND o.date_time >= CONCAT(%s, ' ', w.`start_work_day`)
+				AND o.date_time <= CONCAT(%s, ' ', w.`end_work_day`))
+				OR (
+				w.is_round_the_clock = 1
+				AND o.date_time >= CONCAT(%s, ' ', '00:00:00')
+				AND o.date_time <= CONCAT(%s, ' ', '23:59:59'))
 			)
 			AND 
 				o.cancelled = 0
@@ -475,8 +481,15 @@ def operator_viewmodel(request, day, month, year, washing_id):
 		"""
 
 	ymd = '%s-%s-%s' % (year, month, day)
-	orders_items = Order.objects.raw(post_number_query, [washing_id, ymd, ymd])
+	print ymd
+	orders_items = Order.objects.raw(post_number_query, [washing_id, ymd, ymd, ymd, ymd])
 	
+	# s = ""
+	# for order in orders_items:
+	# 	s += " " + str(order)
+
+	# raise Exception(s)
+
 	washing = Washing.objects.get(pk=washing_id)
 	timegrid = TimeGrid(washing.start_work_day, washing.end_work_day, washing.timeframe_minutes)
 
