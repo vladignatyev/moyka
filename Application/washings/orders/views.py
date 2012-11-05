@@ -338,6 +338,7 @@ def operator_updateorder(request, order_id):
 				raise Http404
 		
 		order.autono = request.POST['autono']
+		order.phone = request.POST['phone'] 
 		order.details = request.POST['details']
 		order.name = request.POST['name']
 		order.note = request.POST['note']

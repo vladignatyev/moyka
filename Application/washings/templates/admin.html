@@ -212,6 +212,7 @@
             $('#popup .details').val('');
             $('#popup .name').val('');
             $('#popup .notes').val('');
+            $('#popup .phone').val('');
 
             $('#popup .timeframe').val(timeframe);
             $('#popup .postnumber').val(postnumber);
@@ -224,6 +225,7 @@
             $('#popup .details').val(order.details);
             $('#popup .name').val(order.name);
             $('#popup .notes').val(order.note);   
+            $('#popup .phone').val(order.phone);
         }
 
         function grabPopupData()
@@ -232,12 +234,12 @@
                 id: $('#popup .orderId').val(),
                 autono: $('#popup .autono').val(),
                 details: $('#popup .details').val(),
+                phone: $('#popup .phone').val(),
                 name: $('#popup .name').val(),
                 note: $('#popup .notes').val(),
                 postnumber: $('#popup .postnumber').val(),
                 timeframe: $('#popup .timeframe').val()
             };
-            console.log(resultObject);
             return resultObject;
         }
 
@@ -329,6 +331,7 @@
     <input type="text" placeholder="Номер авто" class="autono field" value="" />
     <input type="text" placeholder="Детали заказа" class="details field" value="" />
     <input type="text" placeholder="Имя клиента" class="name field" value="" />
+    <input type="text" placeholder="Телефон" class="phone field" value="" />
     <textarea class="notes"></textarea>
     <div class="buttons">
         <input type="hidden" class="orderId" value="" />
