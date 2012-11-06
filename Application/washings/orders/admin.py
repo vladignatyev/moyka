@@ -4,6 +4,8 @@ from orders.models import Washing, Order, UserProfile, SiteSettings
 
 
 class WashingAdmin(admin.ModelAdmin):
+    list_max_show_all = 10
+    list_filter = ['is_enabled']
     search_fields = ['title']
 
 admin.site.register(Washing, WashingAdmin)
