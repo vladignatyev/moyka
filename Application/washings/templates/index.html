@@ -187,7 +187,7 @@
                 var washing = viewModel[i];
                 buttonsContent = '';
                 if (washing.is_enabled) {
-                    buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto;">Выбрать эту мойку</button>';
+                    buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto; width:140px;">Выбрать эту мойку</button>';
                 }
 
                 var title = ["<h2>",washing.name,"</h2>"].join('');
@@ -384,6 +384,9 @@
             $('button.selectwashing').live('click', selectWashingClickHandler);
             $('#choosebywashing a:not(.disabled)').live('click', pickTimeClickHandler);
             $('#choosebywashing .radio').live('click', switchTodayTomorrowHandler);
+
+            $('input[type=text]').placeholder();
+            $('input[type=email]').placeholder();
         }
 
         String.prototype.capitalize = function() {
@@ -437,7 +440,7 @@
                 <input type="text" id="hours" value="18"></input>
                 <input type="text" id="minutes" value="00" />
             </div>
-            <button id="selectByTime" style="margin:0 auto;">Выбрать мойку по времени</button>
+            <button id="selectByTime" style="margin:0 auto; width:210px;">Выбрать мойку по времени</button>
         </div>
     </div>
 
