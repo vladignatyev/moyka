@@ -342,7 +342,7 @@ def operator_updateorder(request, order_id):
 		order.details = request.POST['details']
 		order.name = request.POST['name']
 		order.note = request.POST['note']
-		order.is_created_by_staff = True
+		# order.is_created_by_staff = True # don't make blue 
 		order.save()
 
 		return orders.JSONResponse({'result':'ok'})
@@ -472,7 +472,6 @@ def operator_viewmodel(request, day, month, year, washing_id):
 		"""
 
 	ymd = '%s-%s-%s' % (year, month, day)
-	print ymd
 	orders_items = Order.objects.raw(post_number_query, [washing_id, ymd, ymd, ymd, ymd])
 	
 	washing = Washing.objects.get(pk=washing_id)
