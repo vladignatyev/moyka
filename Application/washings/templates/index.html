@@ -11,6 +11,7 @@
     <meta name="verify-reformal" content="178f90ad542daa47deaf9ede" />
 
     <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/html5placeholder.jquery.js" %}"></script>
     <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
     <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
@@ -159,10 +160,12 @@
             });
 
             mapView.controls.add('zoomControl');
-            mapView.controls.add('typeSelector');
+            
 
-            var trafficControl = new ymaps.control.TrafficControl({shown: true});
-            mapView.controls.add(trafficControl, {bottom: 100, left: 10});
+            var trafficControl = new ymaps.control.TrafficControl({shown: false});
+            mapView.controls.add(trafficControl, {top: 50, right: 5});
+
+            mapView.controls.add('typeSelector');
 
             viewModel = parseViewData(washings_data);
             updateMapView();
