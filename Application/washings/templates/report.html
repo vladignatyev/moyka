@@ -158,7 +158,7 @@ function openReportPage()
             <td>{{ order.autono }}</td>
             <td>{{ order.washing_post_number }}</td>
             <td>{% if not order.is_created_by_staff %}да{% else %}нет{% endif %}</td>
-            <td>{% if not order.cancelled %}да{% else %}нет{% endif %}</td>
+            <td>{% if order.cancelled %}да{% else %}нет{% endif %}</td>
         </tr>
     {% endfor %}
     </tbody>
