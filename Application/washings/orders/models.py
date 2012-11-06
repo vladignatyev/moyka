@@ -25,7 +25,7 @@ class Washing(models.Model):
 		return u"%s — %s" % (self.title, self.address)
 	class Meta:
 		verbose_name = u"мойку"
-		verbose_name_plural = u"мойки"
+		verbose_name_plural = u"моек"
 
 
 class Order(models.Model):

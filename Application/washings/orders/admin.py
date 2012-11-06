@@ -4,7 +4,8 @@ from orders.models import Washing, Order, UserProfile, SiteSettings
 
 
 class WashingAdmin(admin.ModelAdmin):
-    list_max_show_all = 10
+    list_max_show_all = 100
+    list_per_page = 40
     list_filter = ['is_enabled']
     search_fields = ['title']
 
