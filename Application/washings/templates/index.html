@@ -5,7 +5,7 @@
     <link rel="shortcut icon" href="favicon.ico" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="robots" content="index, follow"/>
-    <meta name="keywords" content="icon design, ios, retina, mac os x, osx, os x"/>
+    <meta name="keywords" content=""/>
     <meta name="description" content=""/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <meta name="verify-reformal" content="178f90ad542daa47deaf9ede" />
@@ -435,9 +435,9 @@
 	
     <div id="bottom">
         <div id="bottombar" class="hcenter">
-            <p>Выберете мойку<br/>или введите желаемое время</p>
+            <p>Выберите мойку<br/>или введите желаемое время</p>
             <div class="ordertime">
-                <input type="text" id="hours" value="18"></input>
+                <input type="text" id="hours" value="18" />
                 <input type="text" id="minutes" value="00" />
             </div>
             <button id="selectByTime" style="margin:0 auto; width:210px;">Выбрать мойку по времени</button>
@@ -464,7 +464,6 @@
                 Мойка инфо<br/>
                 &copy; 2012
             </div>
-
         </div>
     </div>
 
@@ -478,13 +477,10 @@
                 {% endif %}
                 <li href="#" id="washingslist"><b>Список моек &darr;</b>
                     <div class="submenu">
-                        <!-- washings list here -->
                     </div>
                 </li>
-                
             </ul>
             <img id="logo" src="{% static "img/logo.png" %}" />
-            
         </div>
     </div>
 
@@ -492,8 +488,8 @@
         <div class="shader"></div>
         <div class="popupcontent">
             <div class="inner">
-                    <h5>Флагман</h5>
-                    <h6>ул. Ботаническая, д. 20 корп. 1</h6>
+                    <h5></h5>
+                    <h6></h6>
 
                 <div class="leftsidebar">
                     <div class="todaytomorrowselector">
@@ -573,8 +569,8 @@
 </script>
 <noscript><div><img src="//mc.yandex.ru/watch/17594206" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
+<!-- Google analytics counter -->
 <script type="text/javascript">
-
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-35455826-1']);
   _gaq.push(['_trackPageview']);
@@ -584,9 +580,10 @@
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
-
 </script>
+<!-- /Google analytics counter -->
 
+<!-- Reformal -->
 <script type="text/javascript">
     var reformalOptions = {
         project_id: 74715,
@@ -606,6 +603,7 @@
         script.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'media.reformal.ru/widgets/v3/reformal.js';
         document.getElementsByTagName('head')[0].appendChild(script);
     })();
-</script><noscript><a href="http://reformal.ru"><img src="http://media.reformal.ru/reformal.png" /></a><a href="http://moykainfo.reformal.ru">Оставьте отзыв</a></noscript>
+</script>
+<noscript><a href="http://reformal.ru"><img src="http://media.reformal.ru/reformal.png" /></a><a href="http://moykainfo.reformal.ru">Оставьте отзыв</a></noscript>
 </body>
 </html>
