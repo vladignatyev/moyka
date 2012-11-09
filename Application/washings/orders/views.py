@@ -108,6 +108,8 @@ def get_available_times_for_washing(request, washing_id, today_or_tommorow):
 
 	time_to_run_delta = timedelta(minutes=_TIME_TO_RUN_TO_WASHING_MINUTES)
 
+	# nearest_tick, delta_time = timegrid.grid[0], (now + time_to_run_delta - timegrid.grid[0]).seconds
+
 	for tick in timegrid.grid:
 		is_occupied = False
 		for (occupied_time, occupied) in occupied_times:
@@ -130,17 +132,12 @@ def get_washings_by_availability(request, today_or_tommorow, hours, minutes):
 
 	query = """
     	SELECT * FROM orders_washing AS w1
- WHERE w1.id NOT IN (SELECT id FROM (SELECT w.id, COUNT(*) >= w.`washing_posts_count` as occupied
-    	FROM orders_order as o, orders_washing as w 
-    	WHERE o.cancelled <> 1 AND o.washing_id=w.id 
-    	AND o.date_time = %s
-    	GROUP BY o.date_time) as ow WHERE ow.occupied=1) 
-    	AND w1.is_hidden = 0 AND (
+ WHERE w1.is_hidden = 0 AND (
     	     (w1.end_work_day < w1.start_work_day AND (w1.end_work_day >= %s OR w1.start_work_day <= %s))
     	     OR (w1.start_work_day <= %s AND w1.end_work_day >= %s));
     	"""
 
-	return orders.JSONModelResponse(Washing.objects.raw(query, [order_dt, order_time, order_time, order_time, order_time]))
+	return orders.JSONModelResponse(Washing.objects.raw(query, [order_time, order_time, order_time, order_time]))
 
 import copy
 @csrf_protect

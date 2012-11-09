@@ -219,12 +219,13 @@ button.disabled, .button.disabled {
 
 #choosebywashing .leftsidebar, #choosebywashing .rightsidebar { margin-top: 15px;}
 
-#timeselection { list-style-type:none; padding:0; margin:0; overflow: hidden;}
+#timeselection { list-style-type:none; padding:0 0 0 3px; margin:0; overflow: hidden;}
 #timeselection li { display: block; float:left; height:30px; width:80px;}
 #timeselection li a { text-align:right; font-size:14px; color: #037500; text-decoration:none; border-bottom:1px dotted #037500; }
 #timeselection li a.disabled { font-size:14px; color:#9d0c0c; border:0; font-weight:bolder; }
 #timeselection li a.timedout { font-size:14px; color:#333 !important; border:0; font-weight:bolder; }
-#timeselection li a.selected { background: #1c85c6 !important; color:#fff !important; font-weight:bolder; }
+#timeselection li a.selected { background: #1c85c6 !important; color:#fff !important; font-weight:bolder; padding: 0 3px; border-radius: 5px;
+margin-left: -3px;}
 
 .menu { padding:0; margin:0; list-style-type:none; }
 .menu>li { display: block; float: right; border-left:1px solid #1173cb; border-right: 1px solid #0b91da; height:50px; text-decoration:none;}
