@@ -140,9 +140,9 @@
             }
         }
 
-        $('#popup .close').live('click', function(){ hidePopup(); })
+        
 
-        $('.c').live('click', function(){
+        function showEditingPopup(){
             hideSelection();
             $(this).addClass('selected');
 
@@ -175,10 +175,16 @@
             }
 
             showUpdatePopup(orderById, x, y);
-        });
+        }
 
-        $('#popup .cancelbutton').live('click', deletePopup);
-        $('#popup .okbutton').live('click', submitPopup);
+        eventName = 'click';
+        var ua = navigator.userAgent;
+        eventName = (ua.match(/iPad/i) || ua.match(/iPhone/i)) ? "touchstart" : "click";
+
+        $('#popup .close').live(eventName, function(){ hidePopup(); })
+        $('.c').live(eventName, showEditingPopup);
+        $('#popup .cancelbutton').live(eventName, deletePopup);
+        $('#popup .okbutton').live(eventName, submitPopup);
 
         function hideSelection() {
             $('.c').each(function(i,obj){if ($(obj).hasClass('selected')) $(obj).removeClass('selected');});
