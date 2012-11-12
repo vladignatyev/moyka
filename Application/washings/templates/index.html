@@ -11,7 +11,7 @@
     <meta name="verify-reformal" content="178f90ad542daa47deaf9ede" />
 
     <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/html5placeholder.jquery.js" %}"></script>
+    
     <script type="text/javascript" src="{% static "js/jquery-ui-1.8.16.custom.min.js" %}"></script>
     <script type="text/javascript" src="/washings/jsonp/all/"></script>
 
@@ -20,6 +20,16 @@
 
     <link rel="stylesheet" href="{% static "css/fonts.css" %}" />
     <link rel="stylesheet" href="{% static "css/main.css" %}" />
+    <!--[if IE]>
+    <link rel="stylesheet" href="{% static "css/main-ie8.css" %}" />
+    <style type="text/css">
+        li:hover .submenu {
+            overflow:auto !important;
+        }
+    </style>
+    <script type="text/javascript" src="{% static "js/html5placeholder.jquery.js" %}"></script>
+    <![endif]-->
+
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
     
 	<script type="text/javascript">
@@ -436,10 +446,12 @@
     <div id="bottom">
         <div id="bottombar" class="hcenter">
             <p>Выберите мойку<br/>или введите желаемое время</p>
-            <div class="ordertime">
-                <input type="text" id="hours" value="18" />
-                <input type="text" id="minutes" value="00" />
-            </div>
+            <table class="ordertime">
+                <tr><td>
+                    <input type="text" id="hours" value="18" />
+                </td><td>
+                    <input type="text" id="minutes" value="00" /></td></tr>
+            </table>
             <button id="selectByTime" style="margin:0 auto; width:210px;">Выбрать мойку по времени</button>
         </div>
     </div>
