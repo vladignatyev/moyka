@@ -165,7 +165,7 @@
 			mapView = new ymaps.Map('bigmap', {
                 center: [{{ MAP_CENTER_LAT|floatformat:6 }}, {{ MAP_CENTER_LON|floatformat:6 }}],
                 zoom: 12,
-                type:'yandex#hybrid',
+                type:'yandex#publicMap',
                 behaviors: ['default', 'scrollZoom']
             });
 
