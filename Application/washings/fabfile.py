@@ -51,6 +51,7 @@ def deploy():
         put("templates", "/home/moykainfo")
 
         if raw_input('Do you need to reload all data? (YES/no)') == 'YES':
+            run("./env/bin/python manage.py migrate --all --fake 0001")
             run("./env/bin/python manage.py syncdb --noinput")
             # run("./env/bin/python manage.py flush --noinput")
 

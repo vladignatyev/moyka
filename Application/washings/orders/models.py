@@ -6,12 +6,25 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 
 
+class City(models.Model):
+	name = models.CharField(max_length=64, blank=False, verbose_name=u'Город')
+	geo_lon = models.FloatField(blank=False, verbose_name=u'Восточная долгота')
+	geo_lat = models.FloatField(blank=False, verbose_name=u'Северная широта')
+	def __unicode__(self):
+		return u"%s" % (self.name)
+
+	class Meta:
+		verbose_name = u"город"
+		verbose_name_plural = u"города"
+
+
 class Washing(models.Model):
 	title = models.CharField(max_length=64, blank=False, verbose_name=u'Название')
 	geo_lon = models.FloatField(blank=False, verbose_name=u'Восточная долгота')
 	geo_lat = models.FloatField(blank=False, verbose_name=u'Северная широта')
 	
 	description = models.TextField(blank=True, verbose_name=u'Описание')
+	city = models.ForeignKey(City, editable=True, verbose_name=u'Город', related_name='+', default=1)
 	address = models.TextField(blank=True, verbose_name=u'Адрес')
 	start_work_day = models.TimeField(verbose_name=u'Начало рабочего дня')
 	end_work_day = models.TimeField(verbose_name=u'Конец рабочего дня автомойки')
@@ -20,6 +33,7 @@ class Washing(models.Model):
 	washing_posts_count = models.IntegerField(verbose_name=u'Количество моечных постов')
 	is_hidden = models.BooleanField(verbose_name=u'Мойка скрыта?', default=True)
 	is_enabled = models.BooleanField(verbose_name=u'На мойку можно записаться?', default=False)
+
 
 	def __unicode__(self):
 		return u"%s — %s" % (self.title, self.address)
