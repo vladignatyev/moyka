@@ -20,30 +20,10 @@
     <title>Управление заказами</title>
 
     <script type="text/javascript">
-        var _lockUpdate = false;
-
-        function lockUpdate()
-        {
-            if (!_lockUpdate) {
-                _lockUpdate = true;
-                return true;
-            }
-        }
-
-        function unlockUpdate()
-        {
-            _lockUpdate = false;
-        }
-
         function init() {
             setupDatepicker();
             retrieveData();
-            autoUpdate();
             $("#reportButton").click(openReportPage);
-        }
-
-        function autoUpdate() {
-            setInterval(retrieveData, 2000);
         }
 
         function setupDatepicker() {
@@ -64,7 +44,6 @@
         }
 
         function retrieveData() {
-            if (!lockUpdate()) return;
             rnd = Math.random() * 1E8;
             $.get(['/operator/data/byday/',viewState.selectedDate[0],
                 '/month/',viewState.selectedDate[1],
@@ -76,7 +55,6 @@
                         viewModel = data.result;
                         updateView();
                     } 
-                    unlockUpdate();
                 });
         }
 
@@ -105,7 +83,7 @@
 
         function updateOrderPostNumber(order_id, new_post_number) {
             $.post(['/operator/data/changepostnumber/order/', order_id, 
-                '/newpostnumber/',new_post_number].join(''), {}, function(data, status){updateView();});
+                '/newpostnumber/',new_post_number].join(''), {}, function(data, status){retrieveData();});
         }
 
         function updateView() {
@@ -148,26 +126,14 @@
                 "addClasses":true, 
                 "appendTo":"body", 
                 "opacity":0.5, 
-                "zIndex":100,
+                "zIndex":80,
                 "revert": false,
-
-                start: function (event, ui) {
-                    lockUpdate();
-                },
-                stop:function (event, ui) {
-                    setTimeout(function(){unlockUpdate();}, 1000); //todo: remove autoupdate at all: update on creating order, on moving order
-                }
             });
 
             $(".c").droppable({
                 drop: function (event, ui) {
                     draggedItem = $(ui.draggable[0]);
-
                     updateOrderPostNumber(draggedItem.data('id'), $(this).data('postnumber'));
-                    console.log(draggedItem.data('id'));
-                    console.log($(this).data('postnumber'));
-
-                    unlockUpdate();
                 }
             });
         }
@@ -225,12 +191,10 @@
         function hidePopup() {
             $('#popup').hide();
             hideSelection();
-            unlockUpdate();
             retrieveData();
         }
 
         function showUpdatePopup(order, x, y) {
-            lockUpdate();
             $('#popup').show();
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -240,7 +204,6 @@
         }
 
         function showCreatePopup(timeframe, postnumber, x, y) {
-            lockUpdate();
             $('#popup').show();   
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -292,35 +255,31 @@
         }
 
         function deleteOrder(order) {
-            lockUpdate();
             if (confirm('Вы уверены что хотите удалить этот заказ?')) {
                 $.get(['/operator/data/delete/',order.id].join(''),
                 {}, 
                 function(data, status){
+                    retrieveData();
                     if (status == 'success') {
-                        retrieveData();
                         hidePopup();
                     } else {
                         alert('Не удалось удалить выбранный заказ. Повторите попытку!');
                     }
-                    unlockUpdate();
                 });
             }
         }
 
         function updateOrder(order) {
-            lockUpdate();
             if (order.id) {
                 $.post(['/operator/data/update/',order.id].join(''),
                 order, 
                 function(data, status){
+                    retrieveData();
                     if (status == 'success') {
-                        retrieveData();
                         hidePopup();
                     } else {
                         alert('Не удалось изменить выбранный заказ. Повторите попытку!');
                     }
-                    unlockUpdate();
                 });
             } else {
                 order.date_time = [viewState.selectedDate[2], viewState.selectedDate[1], viewState.selectedDate[0]].join('-') + ' ' + order.timeframe;
@@ -328,13 +287,12 @@
                 $.post(['/operator/data/create/washing/',washingId].join(''),
                 order, 
                 function(data, status){
+                    retrieveData();
                     if (status == 'success') {
-                        retrieveData();
                         hidePopup();
                     } else {
                         alert('Не удалось создать заказ. Повторите попытку!');
                     }
-                    unlockUpdate();
                 });
             }
         }

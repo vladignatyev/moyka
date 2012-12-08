@@ -154,6 +154,7 @@ li:hover .submenu {
     position: absolute;
     background: #ebeef3;
     padding: 12px 8px;
+    z-index: 100;
 }
 
 #popup textarea {
@@ -239,6 +240,3 @@ button.disabled, .button.disabled {
 .cancelbutton:hover {
     background: #910a0a;
 }
-
-
-.ui-draggable { z-index: 100; position: absolute;}
