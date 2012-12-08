@@ -309,27 +309,31 @@ def add_order(request, default_method='POST'):
 		transaction.rollback()
 		raise Http404
 
-# todo: wrap in transaction
 # todo: add csrf_protect (see admin.html)
 @login_required
+@transaction.commit_manually
 def operator_changeorderpost(request, order_id, new_post_number):
 	if request.method != "POST":
+		transaction.rollback()
 		raise Http404
+
 	try:
 		profile = request.user.get_profile()
 		order = Order.objects.get(pk=order_id)
 		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
 			if profile.washing.id != order.washing.id:
+				transaction.rollback()
 				raise Http404
 		if order.washing_post_number == new_post_number:
+			transaction.rollback()
 			return orders.JSONResponse({'result':'ok'})
 
 	except Order.DoesNotExist:
+		transaction.rollback()
 		raise Http404
 
 	if int(new_post_number) > order.washing.washing_posts_count or int(new_post_number) < 1:
-		print order.washing.washing_posts_count
-		print new_post_number
+		transaction.rollback()
 		raise Http404
 
 	orders_by_time = Order.objects.filter(date_time=order.date_time).filter(washing=order.washing).filter(cancelled=0)
@@ -341,16 +345,13 @@ def operator_changeorderpost(request, order_id, new_post_number):
 			occupied = o
 			break
 
-	if occupied:
-		print "occupied"
-		print occupied.washing_post_number
-		print "swap"
-		print order.washing_post_number
-		occupied.washing_post_number = order.washing_post_number # do swap
+	if occupied: # do swap
+		occupied.washing_post_number = order.washing_post_number 
 		occupied.save()
 
 	order.washing_post_number = new_post_number
 	order.save()
+	transaction.commit()
 	return orders.JSONResponse({'result':'ok'})
 
 
