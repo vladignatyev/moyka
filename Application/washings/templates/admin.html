@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{% static "css/admin.css" %}" />
 
     <script type="text/javascript" src="{% static "js/admin/jquery-1.8.0.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/admin/jquery-ui-1.8.23.custom.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/admin/jquery-ui-1.9.2.custom.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/admin/jquery.ui.datepicker-ru.js" %}"></script>
 
     <title>Управление заказами</title>
@@ -106,10 +106,10 @@
         function updateView() {
             drawHeader();
             $(".orders").html('');
-            if (viewModel.timeframes_stamp.length < 1) {
-                $(".orders").html('<h3>Заказы отсутствуют</h3>');
-                return;
-            }
+            // if (viewModel.timeframes_stamp.length < 1) {
+            //     $(".orders").html('<h3>Заказы отсутствуют</h3>');
+            //     return;
+            // }
                 
             $('#ordersEditor .header').css('width', ((viewState.postEnd - viewState.postStart + 1) * 103 + 2*100 + 64) + 'px');
 
@@ -132,12 +132,27 @@
                 }
                 for (var k = 0; k < ordersForTime.length;k++) {
                     order = ordersForTime[k];
-                    rowgrid[order.postnumber-viewState.postStart] = '<div data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + order.autono + '</div>';
+                    rowgrid[order.postnumber-viewState.postStart] = '<div data-postnumber="' + order.postnumber + '" data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + order.autono + '</div>';
                 }
                 rowHtml += rowgrid.join('');
                 rowHtml += '<div class="c">' + time + '</div></div>';
                 $(".orders").append(rowHtml);
             }
+
+            $(".orderItem").draggable({"axis":"x", 
+                "addClasses":true, 
+                "appendTo":"body", 
+                "opacity":0.5, 
+                "zIndex":100,
+                "revert": false,
+
+                start: function (event, ui) {
+                    lockUpdate();
+                },
+                stop:function (event, ui) {
+                    unlockUpdate();
+                }
+            });
         }
 
         

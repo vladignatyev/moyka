@@ -309,7 +309,7 @@ def add_order(request, default_method='POST'):
 		transaction.rollback()
 		raise Http404
 
-
+# todo: wrap in transaction
 @login_required
 def operator_changeorderpost(request, order_id, new_post_number):
 	# if request.method != "POST":

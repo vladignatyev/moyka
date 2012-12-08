@@ -239,3 +239,6 @@ button.disabled, .button.disabled {
 .cancelbutton:hover {
     background: #910a0a;
 }
+
+
+.ui-draggable { z-index: 100; position: absolute;}
