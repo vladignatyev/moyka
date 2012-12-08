@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     url(r'^operator/data/delete/(?P<order_id>\d+)$', 'orders.views.operator_deleteorder'),
     url(r'^operator/data/update/(?P<order_id>\d+)$', 'orders.views.operator_updateorder'),
     url(r'^operator/data/create/washing/(?P<washing_id>\d+)$', 'orders.views.operator_createorder'),
+    url(r'^operator/data/changepostnumber/order/(?P<order_id>\d+)/newpostnumber/(?P<new_post_number>\d+)$', 'orders.views.operator_changeorderpost'),
 
     url(r'^partners/', 'orders.views.login_view', name='login'),
     url(r'^logout/', 'orders.views.logout_view'),

@@ -214,9 +214,9 @@
                 
                 timerange = washing.is_round_the_clock? 'Круглосуточно':[formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join('');
                 time = '';
-                // if (washing.is_enabled) {
+                if (washing.is_enabled) {
                     time = ["<p class='time'>",timerange,"</p>"].join('');
-                // }
+                }
 
                 mapView.geoObjects.add(
                     new ymaps.Placemark(

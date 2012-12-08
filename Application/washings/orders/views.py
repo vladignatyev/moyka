@@ -309,6 +309,50 @@ def add_order(request, default_method='POST'):
 		transaction.rollback()
 		raise Http404
 
+
+@login_required
+def operator_changeorderpost(request, order_id, new_post_number):
+	# if request.method != "POST":
+	# 	raise Http404
+	try:
+		profile = request.user.get_profile()
+		order = Order.objects.get(pk=order_id)
+		if profile.role == UserProfile.WASHING_ADMIN_ROLE:
+			if profile.washing.id != order.washing.id:
+				raise Http404
+		if order.washing_post_number == new_post_number:
+			return orders.JSONResponse({'result':'ok'})
+
+	except Order.DoesNotExist:
+		raise Http404
+
+	if int(new_post_number) > order.washing.washing_posts_count or int(new_post_number) < 1:
+		print order.washing.washing_posts_count
+		print new_post_number
+		raise Http404
+
+	orders_by_time = Order.objects.filter(date_time=order.date_time).filter(washing=order.washing).filter(cancelled=0)
+
+	occupied = None
+	for o in orders_by_time:
+		print o.washing_post_number
+		if o.washing_post_number == int(new_post_number):
+			occupied = o
+			break
+
+	if occupied:
+		print "occupied"
+		print occupied.washing_post_number
+		print "swap"
+		print order.washing_post_number
+		occupied.washing_post_number = order.washing_post_number # do swap
+		occupied.save()
+
+	order.washing_post_number = new_post_number
+	order.save()
+	return orders.JSONResponse({'result':'ok'})
+
+
 @login_required
 def operator_deleteorder(request, order_id):
 	try:
