@@ -295,6 +295,7 @@
             centerLayouts();
             $(window).resize(centerLayouts);
             $('#selectByTime').click(selectWashingsByTime);
+            $('#unselectByTime').click(unselectWashingsByTime);
 
             function selectWashingClickHandler(){
                 showPopup($("#choosebywashing"), choosebywashingCloseHandler); 
@@ -383,8 +384,8 @@
                         } else {
                             $('#notification .notifyContent').html(
                                 [
-                                    '<h4>', 'Ой-ой!</h4>',
-                                    '<p>', 'К сожалению, зарегистрировать заказ не удалось. Попробуйте повторите попытку вновь, или укажите другое время. Возможно кто-то другой зарезервировал это время ','</p>'
+                                    '<h4>', 'Ой-ой!', '</h4>',
+                                    '<p>', 'К сожалению, зарегистрировать заказ не удалось. Попробуйте повторите попытку вновь, или укажите другое время. Возможно кто-то другой уже зарезервировал это время','</p>'
                                 ].join(''));
                         }
                         showPopup($('#notification'));
@@ -437,6 +438,17 @@
                     updateListView();
                     updateMapView();
                 });
+
+            $("#selectByTime").hide();
+            $("#unselectByTime").show();
+        }
+
+        function unselectWashingsByTime() {
+            viewModel = parseViewData(washings_data);
+            updateMapView();
+            updateListView();
+            $("#selectByTime").show();
+            $("#unselectByTime").hide();
         }
 
 		ymaps.ready(init);
@@ -456,6 +468,7 @@
                     <input type="text" id="minutes" value="00" /></td></tr>
             </table>
             <button id="selectByTime" style="margin:0 auto; width:210px;">Выбрать мойку по времени</button>
+            <button id="unselectByTime" style="margin:0 auto; width:140px; display:none;">Отменить выбор</button>
         </div>
     </div>
 
