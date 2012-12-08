@@ -96,7 +96,7 @@
 
         function showPopup(element, closeHandler) {
             $(element).find('.popupcontent').css('left', ($(document).width()-$(element).find('.popupcontent').width())/2 + 'px');
-            $(element).find('.popupcontent').css('top', ($(window).height()-270)/2 + 'px');
+            $(element).find('.popupcontent').css('top', ($(window).height()-$(element).find('.popupcontent').height())/2 + 'px');
             beforeshowtop = $('#top').css('top');
             beforeshowbottom = $('#bottom').css('bottom');
             $('#top').animate({'top': '-'+($("#top").height()+20)+'px'}, "fast");
