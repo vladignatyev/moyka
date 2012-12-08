@@ -103,6 +103,11 @@
             $('.header').html(html);
         }
 
+        function updateOrderPostNumber(order_id, new_post_number) {
+            $.post(['/operator/data/changepostnumber/order/', order_id, 
+                '/newpostnumber/',new_post_number].join(''), {}, function(data, status){updateView();});
+        }
+
         function updateView() {
             drawHeader();
             $(".orders").html('');
@@ -125,7 +130,7 @@
                     }
                 }
 
-                rowHtml = '<div class="row"><div class="c">' + time + '</div>';
+                rowHtml = '<div class="row"><div class="cc">' + time + '</div>';
                 rowgrid = [];
                 for (var j = viewState.postStart; j<=viewState.postEnd; j++) {
                     rowgrid.push('<div data-timeframe="' + time + '" data-postnumber="' + j + '" class="c"></div>');
@@ -135,7 +140,7 @@
                     rowgrid[order.postnumber-viewState.postStart] = '<div data-postnumber="' + order.postnumber + '" data-id="' + order.id + '" class="c orderItem ' + (order.is_created_by_staff?'staff':'') + '">' + order.autono + '</div>';
                 }
                 rowHtml += rowgrid.join('');
-                rowHtml += '<div class="c">' + time + '</div></div>';
+                rowHtml += '<div class="cc">' + time + '</div></div>';
                 $(".orders").append(rowHtml);
             }
 
@@ -150,6 +155,18 @@
                     lockUpdate();
                 },
                 stop:function (event, ui) {
+                    setTimeout(function(){unlockUpdate();}, 1000); //todo: remove autoupdate at all: update on creating order, on moving order
+                }
+            });
+
+            $(".c").droppable({
+                drop: function (event, ui) {
+                    draggedItem = $(ui.draggable[0]);
+
+                    updateOrderPostNumber(draggedItem.data('id'), $(this).data('postnumber'));
+                    console.log(draggedItem.data('id'));
+                    console.log($(this).data('postnumber'));
+
                     unlockUpdate();
                 }
             });

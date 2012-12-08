@@ -310,10 +310,11 @@ def add_order(request, default_method='POST'):
 		raise Http404
 
 # todo: wrap in transaction
+# todo: add csrf_protect (see admin.html)
 @login_required
 def operator_changeorderpost(request, order_id, new_post_number):
-	# if request.method != "POST":
-	# 	raise Http404
+	if request.method != "POST":
+		raise Http404
 	try:
 		profile = request.user.get_profile()
 		order = Order.objects.get(pk=order_id)
