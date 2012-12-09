@@ -1,0 +1,234 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+    <title>Moykainfo.ru</title> {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+    <script type="text/javascript" src="/washings/jsonp/all/"></script>
+    <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
+
+<script type="text/javascript">
+        function OrderModel()
+        {
+            this.clear = function() {
+                this.washingId = 0;
+                this.time = '';
+                this.tomorrow = 0;
+                this.fio = '';
+                this.phone = '';
+                this.carno = '';
+                this.email = '';
+            }
+
+            this.formatTime = function() {
+                hours = this.time[0];
+                minutes = this.time[1];
+                
+                if (minutes < 10) { minutes = '0' + minutes;}
+                if (hours < 10) { hours = '0' + hours; }
+                return [hours, minutes].join(':'); 
+            }
+
+            this.addOrder = function(successCallback, errorCallback) {
+                postData = {
+                    'washing_id': this.washingId,
+                    'date_time': this.formatTime(this.time),
+                    'tomorrow': this.tomorrow,
+                    'name': this.fio,
+                    'phone': this.phone,
+                    'autono': this.carno,
+                    'email': this.email,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                };
+
+                $.post('/washings/orders/add/', postData, function(data, status){
+                    if (status == 'success') {
+                        if (data.result) {
+                            if (data.result.error) {
+                                console.log('error: ' + data.result.error);
+                                errorCallback(data.result.error, data);
+                            }
+                            if (data.result.new_order) {
+                                successCallback(data.result.new_order, data);
+                            }
+                        }
+                    } else {
+                        console.log('senderror: ' + data);
+                        errorCallback('senderror', null);
+                    }
+                });
+            }
+
+            this.clear();
+            return this;
+        }
+
+        var viewModel;
+        var mapView;
+        var orderModel = new OrderModel();
+
+
+        function normalize10(t) {
+            if (t < 10) return '0'+t;
+            else return t+'';
+        }
+
+        function init () {
+            mapView = new ymaps.Map('bigmap', {
+                center: [{{ MAP_CENTER_LAT|floatformat:6 }}, {{ MAP_CENTER_LON|floatformat:6 }}],
+                zoom: 12,
+                type:'yandex#publicMap',
+                behaviors: ['default', 'scrollZoom']
+            });
+
+            var trafficControl = new ymaps.control.TrafficControl({shown: false});
+            mapView.controls.add(trafficControl, {top: 50, right: 5});
+            mapView.controls.add('typeSelector');
+
+            viewModel = parseViewData(washings_data);
+            updateMapView();
+        }
+
+        function formatTime(time) {
+            return [time.split(":")[0],time.split(":")[1]].join(':');
+        }
+
+        function updateMapView() {
+            mapView.geoObjects.each(function (geoObject) {
+                mapView.geoObjects.remove(geoObject);
+            });
+            
+            for (var i in viewModel) {
+                var washing = viewModel[i];
+                buttonsContent = '';
+                if (washing.is_enabled) {
+                    buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto; width:140px;">Выбрать эту мойку</button>';
+                }
+
+                var title = ["<h2>",washing.name,"</h2>"].join('');
+
+                {% if profile.role == 'S' %}
+                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
+                {% elif profile.role == 'W' %}
+                if (washing.id == '{{ profile.washing.id }}') {
+                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
+                }
+                {% endif %}
+                
+                timerange = washing.is_round_the_clock? 'Круглосуточно':[formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join('');
+                time = '';
+                if (washing.is_enabled) {
+                    time = ["<p class='time'>",timerange,"</p>"].join('');
+                }
+
+                mapView.geoObjects.add(
+                    new ymaps.Placemark(
+                        [washing.geo[1], washing.geo[0]], 
+                        {
+                            "washing_id": washing.id, 
+                            balloonContent: 
+                            [title,
+                            "<p class='description'>",washing.description,"</p>",
+                            "<p class='address'>",washing.address,"</p>",
+                            time,
+                            buttonsContent
+                            ].join(''),
+                            hintContent: ['<b>', washing.name, "</b><br/>", washing.address].join(''),
+                            iconContent: ""
+                        }, 
+                        { 
+                            balloonCloseButton: true
+                        }
+                        )
+                    );
+                var washing_id = washing.id;
+            }
+        }
+
+/*
+        function retrieveDataForTimeGridByWashingIdAndToday(washingId, todayortomorrow) {
+            $.get('/washings/timegrid/' + washingId + '/bytoday/' + todayortomorrow, function(data){
+                updateTimeGridViewWithData(data);
+            });
+        }
+
+        String.prototype.capitalize = function() {
+            return this.charAt(0).toUpperCase() + this.slice(1);
+        }
+*/
+        function parseViewData(viewData) {
+            var list = [];
+            for (var i in viewData) {
+                var fields = viewData[i].fields;
+
+                list.push({
+                    "id": viewData[i].pk,
+                    "address":fields.address, 
+                    "name":fields.title, 
+                    "description":fields.description, 
+                    "geo": [fields.geo_lon, fields.geo_lat],
+                    "start_work_day": fields.start_work_day,
+                    "end_work_day": fields.end_work_day,
+                    "is_round_the_clock": fields.is_round_the_clock,
+                    "is_enabled": fields.is_enabled
+                });
+            }
+            return list;
+        }
+
+        ymaps.ready(init);
+    </script>
+
+    <style type="text/css">
+    body {min-height: 100%;}
+    #bigmap {
+        position: absolute;
+        width: 100%;
+        min-height: 100%;
+        height: 100% !important;
+    }
+
+    .ymaps-map {
+        font-size: 10px;
+    }
+
+    .ymaps-coyprights-ua-extended {
+        font-size: 8px !important;
+    }
+
+    body {
+        min-height: 100%;
+    }
+
+    .ui-bar-a { padding:4px;}
+
+[data-role=page]{height: 100% !important; position:relative !important;}
+[data-role=footer]{bottom:0; position:absolute !important; top: auto !important; width:100%;} 
+[data-role=content].map { margin:0!important; padding:0!important; }
+    </style>
+
+</head> 
+<body> 
+
+<div id="index" data-role="page">
+    <div data-role="content" class="map" style="padding:0;">   
+        <img style="z-index:100; position:absolute; height:20px; margin-top:4px; margin-left: 4px;" src="{% static "img/logo.png" %}" />
+        <div id="bigmap"></div>
+
+    </div><!-- /content -->
+    <div data-role="footer">
+        <a href="#" data-role="button">Списком</a>
+        <a href="#" data-role="button">По времени</a>
+    </div>
+
+</div><!-- /page -->
+<!-- 
+<div id="list" data-role="page">
+</div> -->
+
+{% csrf_token %}
+
+</body>
+</html>

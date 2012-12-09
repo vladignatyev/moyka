@@ -38,7 +38,10 @@ def index(request):
 		site_settings = SiteSettings()
 		site_settings.save()
 
-	return render_to_response('index.html', 
+	templateHtml = 'index.html'
+	if 'Mobile' in request.META['HTTP_USER_AGENT']:
+		templateHtml = 'mobile.html'
+	return render_to_response(templateHtml, 
 		{'profile': profile, 'site_settings': site_settings, 'now': datetime.now(), 
 		'time_to_run_delta': _TIME_TO_RUN_TO_WASHING_MINUTES,
 		"MAP_CENTER_LAT": 53.511311, "MAP_CENTER_LON": 49.418084}, 
