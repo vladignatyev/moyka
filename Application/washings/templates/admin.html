@@ -20,10 +20,43 @@
     <title>Управление заказами</title>
 
     <script type="text/javascript">
+        var updateLock = false;
+
         function init() {
             setupDatepicker();
             retrieveData();
             $("#reportButton").click(openReportPage);
+            autoUpdate();
+
+            $(document).add('.orders').bind('scroll', function(){
+                lockUpdates();
+                console.log('test');
+                setTimeout(function(){unlockUpdates(); }, 2000);
+            });
+        }
+
+        function lockUpdates() {
+            updateLock = true;
+            console.log('updatelock:' + updateLock);
+            return updateLock;
+        }
+
+        function unlockUpdates() {
+            console.log('updatelock:' + updateLock);
+            updateLock = false;
+            // if (updateLock < 0) {
+            //     console.log("update lock became < 0");
+            //     updateLock = 0;
+            // }
+            return updateLock;
+        }
+
+        function autoUpdate() {
+            setInterval(function(){
+                
+            if (updateLock>0) return;
+            retrieveData();
+            }, 1900);
         }
 
         function setupDatepicker() {
@@ -89,10 +122,6 @@
         function updateView() {
             drawHeader();
             $(".orders").html('');
-            // if (viewModel.timeframes_stamp.length < 1) {
-            //     $(".orders").html('<h3>Заказы отсутствуют</h3>');
-            //     return;
-            // }
                 
             $('#ordersEditor .header').css('width', ((viewState.postEnd - viewState.postStart + 1) * 103 + 2*100 + 64) + 'px');
 
@@ -127,11 +156,18 @@
                 "appendTo":"body", 
                 "opacity":0.5, 
                 "zIndex":80,
-                "revert":true
+                "revert":true,
+                start:function(e,ui){
+                    lockUpdates();
+                },
+                stop:function(e,ui){
+                    unlockUpdates();
+                }
             });
 
             $(".c").droppable({
                 drop: function (event, ui) {
+                    unlockUpdates();
                     draggedItem = $(ui.draggable[0]);
                     updateOrderPostNumber(draggedItem.data('id'), $(this).data('postnumber'));
                 }
@@ -141,6 +177,7 @@
         
 
         function showEditingPopup(){
+
             hideSelection();
             $(this).addClass('selected');
 
@@ -191,10 +228,12 @@
         function hidePopup() {
             $('#popup').hide();
             hideSelection();
+            unlockUpdates();
             retrieveData();
         }
 
         function showUpdatePopup(order, x, y) {
+            lockUpdates();
             $('#popup').show();
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -204,6 +243,7 @@
         }
 
         function showCreatePopup(timeframe, postnumber, x, y) {
+            lockUpdates();
             $('#popup').show();   
             $("#popup").css('left', x + 'px');
             $("#popup").css('top', y + 'px');
@@ -259,6 +299,7 @@
                 $.get(['/operator/data/delete/',order.id].join(''),
                 {}, 
                 function(data, status){
+                    unlockUpdates();
                     retrieveData();
                     if (status == 'success') {
                         hidePopup();
@@ -274,6 +315,7 @@
                 $.post(['/operator/data/update/',order.id].join(''),
                 order, 
                 function(data, status){
+                    unlockUpdates();
                     retrieveData();
                     if (status == 'success') {
                         hidePopup();
@@ -287,6 +329,7 @@
                 $.post(['/operator/data/create/washing/',washingId].join(''),
                 order, 
                 function(data, status){
+                    unlockUpdates();
                     retrieveData();
                     if (status == 'success') {
                         hidePopup();

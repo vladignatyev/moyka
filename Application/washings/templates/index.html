@@ -51,8 +51,8 @@
                 hours = this.time[0];
                 minutes = this.time[1];
                 
-                if (minutes < 10) { minutes = '0' + minutes;}
-                if (hours < 10) { hours = '0' + hours; }
+                if (minutes < 10) { minutes = '0' + parseInt(minutes);}
+                if (hours < 10) { hours = '0' + parseInt(hours); }
                 return [hours, minutes].join(':'); 
             }
 
