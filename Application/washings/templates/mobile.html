@@ -10,6 +10,8 @@
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
 
 <script type="text/javascript">
+        initialized = false; 
+
         function OrderModel()
         {
             this.clear = function() {
@@ -87,7 +89,7 @@
             mapView.controls.add(trafficControl, {top: 50, right: 5});
             mapView.controls.add('typeSelector');
 
-            viewModel = parseViewData(washings_data);
+            selectWashingsByTime();
             updateMapView();
         }
 
@@ -178,9 +180,27 @@
             return list;
         }
 
+        function selectWashingsByTime() {
+            console.log("selectWashingsByTime");
+            console.log($('#timeSelectHours').val());
+            if (!$('#timeSelectHours').val() || $('#timeSelectHours').val() == '-') {
+                viewModel = parseViewData(washings_data);
+                updateMapView();
+            } else {
+                hours = $('#timeSelectHours').val().split(':')[0];
+                minutes = $('#timeSelectHours').val().split(':')[1];
+                $.get('/washings/bytoday/0/andhours/' + hours + '/minutes/' + minutes,
+                    function (data) {
+                        viewModel = parseViewData(data);
+                        updateMapView();
+                    });
+            }
+        }
+
 
         function updateListView() {
             var list = $("#washingsList");
+            list.html('');
             // list.listview();
             for (var i in viewModel) {
                 var listElement = $("<li><a href='#washing?id=" + viewModel[i].id+ "'>" + viewModel[i].name + "</a></li>");
@@ -190,6 +210,10 @@
         }
 
         function setupTimechoose() {
+            console.log('setupTimechoose');
+            $('#chooseTimeWrapper').html('');
+            $('#chooseTimeWrapper').append($('<select id="timeSelectHours" data-inline="true" ></select>'));
+
             var nearestHour = new Date().getHours();
             var nearestMinute = new Date().getMinutes();
             if (nearestMinute > 30) {
@@ -198,46 +222,56 @@
             } else {
                 nearestMinute = '30';
             }
+            $('#timeSelectHours').append($('<option selected="selected" value="-">Время</option>'));    
             for (var hours = 0; hours < 24; hours++) {
-                hourselected = false;
-                if (hours == nearestHour) {
-                    hourselected = true;
-                }
-
-                time = normalize10(hours) + ':00'; 
-                selected = hourselected && nearestMinute == '00'? ' selected="selected" ': ' ';
-                $('#timeSelectHours').append($('<option' + selected + 'value="' + time + '">' + time + '</option>'));    
-                selected = hourselected && nearestMinute == '30'? ' selected="selected" ': ' ';
-                time = normalize10(hours) + ':30'; 
-                $('#timeSelectHours').append($('<option' + selected + 'value="' + time + '">' + time + '</option>'));    
+                time = normalize10(hours) + ':00';
+                $('#timeSelectHours').append($('<option value="' + time + '">' + time + '</option>'));    
+                time = normalize10(hours) + ':30';
+                $('#timeSelectHours').append($('<option value="' + time + '">' + time + '</option>'));    
             }
 
-            // $('#timeSelectHours').refresh();
+            $('#timeSelectHours').selectmenu();
+            $('#timeSelectHours').live('change', function(){selectWashingsByTime();});
             
         }
 
         $(document).delegate("#chooseTime", "pageinit", function(){setupTimechoose();});
 
-        $(document).delegate("#index", "pageinit", function(){
-            ymaps.ready(init);
-            setupTimechoose();
+        // $(document).delegate("#index", "pageinit", function(){
+            
+        // });
+
+        $(document).ready(function(){
+            ymaps.ready(function(){
+                // ymapInitialized = true;
+                initialized = true;
+                init();
+                setupTimechoose();
+            });
+            
         });
 
         $(document).bind("pagechange", function( e, data ) {
                 var u = $.mobile.path.parseUrl( e.delegateTarget.URL );
                 console.log(data.options);
                 var listre = /^#list/;
+                var indexre = /^$/;
 
                 var washingre = /^#washing/;
 
-                if ( u.hash.search(listre) !== -1 ) {
-                    updateListView();
+                if (u.hash.indexOf('#')>=0 && !initialized) { // to prevent from opening saved hash page 
+                    document.location.href='/';
+                    return;
+                }
 
-                    // Make sure to tell changePage() we've handled this call so it doesn't
-                    // have to do anything.
-                    // e.preventDefault();
+                if ( u.hash.search(listre) !== -1 ) {
+
+                    updateListView();
+                } else if ( u.hash.search(indexre) !== -1 ) {
+                    console.log("TRU");
+                    // init();
                 } 
-            
+                return false;            
             });
     </script>
 
@@ -270,19 +304,11 @@
 
 <div id="index" data-role="page">
     <div data-role="header" style="height:32px;" >
-        <div style="position:absolute; right:0px; top:-4px;">
-            <select id="timeSelectHours" data-inline="true" ></select>
+        <div style="position:absolute; right:0px; top:-5px;" id="chooseTimeWrapper">
+            
         </div>
         <center><img style="z-index:100; height:20px; margin:6px auto;" src="{% static "mobile/logo.png" %}" /></center>
-
-        
-        
-        
-        
-        
-        
         <a href="#list" data-role="button">Списком</a>
-
 
     </div>
     <div data-role="content" class="map" style="padding:0;">   
