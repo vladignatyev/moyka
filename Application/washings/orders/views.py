@@ -46,10 +46,12 @@ def index(request):
 		site_settings = SiteSettings()
 		site_settings.save()
 
-	if not request.session.get('mobile'):
-		templateHtml = 'index.html'
-	elif 'Mobile' in request.META['HTTP_USER_AGENT'] or request.session.get('mobile') == 1:
+
+	templateHtml = 'index.html'
+	if 'Mobile' in request.META['HTTP_USER_AGENT'] or request.session.get('mobile') == 1:
 		templateHtml = 'mobile.html'
+		if not request.session.get('mobile'):
+			request.session['mobile'] = 1
 	return render_to_response(templateHtml, 
 		{'profile': profile, 'site_settings': site_settings, 'now': datetime.now(), 
 		'time_to_run_delta': _TIME_TO_RUN_TO_WASHING_MINUTES,
