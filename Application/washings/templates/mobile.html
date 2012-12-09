@@ -178,22 +178,56 @@
             return list;
         }
 
+
         function updateListView() {
             var list = $("#washingsList");
             // list.listview();
             for (var i in viewModel) {
-                var listElement = $("<li><a href='#washing-" + viewModel[i].id+ "'>" + viewModel[i].name + "</a></li>");
+                var listElement = $("<li><a href='#washing?id=" + viewModel[i].id+ "'>" + viewModel[i].name + "</a></li>");
                 list.append(listElement);
             }
             $('#washingsList').listview('refresh');
         }
 
-        ymaps.ready(init);
-        $(document).ready(function(){
-            $(document).bind( "pagechange", function( e, data ) {
+        function setupTimechoose() {
+            var nearestHour = new Date().getHours();
+            var nearestMinute = new Date().getMinutes();
+            if (nearestMinute > 30) {
+                nearestHour++;
+                nearestMinute = '00';
+            } else {
+                nearestMinute = '30';
+            }
+            for (var hours = 0; hours < 24; hours++) {
+                hourselected = false;
+                if (hours == nearestHour) {
+                    hourselected = true;
+                }
+
+                time = normalize10(hours) + ':00'; 
+                selected = hourselected && nearestMinute == '00'? ' selected="selected" ': ' ';
+                $('#timeSelectHours').append($('<option' + selected + 'value="' + time + '">' + time + '</option>'));    
+                selected = hourselected && nearestMinute == '30'? ' selected="selected" ': ' ';
+                time = normalize10(hours) + ':30'; 
+                $('#timeSelectHours').append($('<option' + selected + 'value="' + time + '">' + time + '</option>'));    
+            }
+
+            // $('#timeSelectHours').refresh();
+            
+        }
+
+        $(document).delegate("#chooseTime", "pageinit", function(){setupTimechoose();});
+
+        $(document).delegate("#index", "pageinit", function(){
+            ymaps.ready(init);
+            setupTimechoose();
+        });
+
+        $(document).bind("pagechange", function( e, data ) {
                 var u = $.mobile.path.parseUrl( e.delegateTarget.URL );
                 console.log(data.options);
                 var listre = /^#list/;
+
                 var washingre = /^#washing/;
 
                 if ( u.hash.search(listre) !== -1 ) {
@@ -202,10 +236,9 @@
                     // Make sure to tell changePage() we've handled this call so it doesn't
                     // have to do anything.
                     // e.preventDefault();
-                }
+                } 
             
             });
-        });
     </script>
 
     <style type="text/css">
@@ -225,10 +258,6 @@
         font-size: 8px !important;
     }
 
-    body {
-        min-height: 100%;
-    }
-
     .ui-bar-a { padding:4px;}
 
 [data-role=page]{height: 100% !important; position:relative !important;}
@@ -240,20 +269,32 @@
 <body> 
 
 <div id="index" data-role="page">
+    <div data-role="header" style="height:32px;" >
+        <div style="position:absolute; right:0px; top:-4px;">
+            <select id="timeSelectHours" data-inline="true" ></select>
+        </div>
+        <center><img style="z-index:100; height:20px; margin:6px auto;" src="{% static "mobile/logo.png" %}" /></center>
+
+        
+        
+        
+        
+        
+        
+        <a href="#list" data-role="button">Списком</a>
+
+
+    </div>
     <div data-role="content" class="map" style="padding:0;">   
-        <img style="z-index:100; position:absolute; height:20px; margin-top:4px; margin-left: 4px;" src="{% static "img/logo.png" %}" />
+        
         <div id="bigmap"></div>
 
     </div><!-- /content -->
-    <div data-role="footer">
-        <a href="#list" data-role="button">Списком</a>
-        <a href="#" data-role="button">По времени</a>
-    </div>
 
 </div><!-- /page -->
 
-<div id="selectedWashing" data-role="page" data-title="ТЕСТ АВТОМОЙКА">
-    <div data-role="content" class="map" style="padding:0;">   
+<div id="washing" data-role="page">
+    <div data-role="content" style="padding:0;">   
         <img style="z-index:100; position:absolute; height:20px; margin-top:4px; margin-left: 4px;" src="{% static "img/logo.png" %}" />
         <div id="washingMap"></div>
 
@@ -262,12 +303,21 @@
 </div>
 
 <div id="list" data-role="page">
+    <div data-role="header" style="height:30px;">
+        <a data-role="button" data-rel="back" data-icon="back">Назад</a>
+    </div>
     <div data-role="content">
         <ul id="washingsList" data-role="listview" data-inset="true" data-filter="true"></ul>
     </div>   
 </div>
 
 <div id="chooseTime" data-role="page">
+    <div data-role="content">
+        <label><b>Укажите желаемое время</b></label>
+        
+        
+
+    </div>
 </div>
 
 
