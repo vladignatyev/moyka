@@ -9,7 +9,7 @@
     <script type="text/javascript" src="/washings/jsonp/all/"></script>
     <script type="text/javascript" src='http://api-maps.yandex.ru/2.0/?load=package.full&lang=ru-RU'></script>
 
-<script type="text/javascript">
+    <script type="text/javascript">
         initialized = false; 
 
         function OrderModel()
@@ -49,7 +49,7 @@
                     if (status == 'success') {
                         if (data.result) {
                             if (data.result.error) {
-                                console.log('error: ' + data.result.error);
+                                
                                 errorCallback(data.result.error, data);
                             }
                             if (data.result.new_order) {
@@ -57,7 +57,7 @@
                             }
                         }
                     } else {
-                        console.log('senderror: ' + data);
+                        
                         errorCallback('senderror', null);
                     }
                 });
@@ -97,6 +97,9 @@
             return [time.split(":")[0],time.split(":")[1]].join(':');
         }
 
+
+        var selectedWashing;
+
         function updateMapView() {
             mapView.geoObjects.each(function (geoObject) {
                 mapView.geoObjects.remove(geoObject);
@@ -104,62 +107,41 @@
             
             for (var i in viewModel) {
                 var washing = viewModel[i];
-                buttonsContent = '';
-                if (washing.is_enabled) {
-                    buttonsContent = '<button class="selectwashing" data-washingid="' + washing.id + '" style="margin:0 auto; width:140px;">Выбрать эту мойку</button>';
-                }
-
-                var title = ["<h2>",washing.name,"</h2>"].join('');
-
-                {% if profile.role == 'S' %}
-                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
-                {% elif profile.role == 'W' %}
-                if (washing.id == '{{ profile.washing.id }}') {
-                    title = ["<h2><a href='/operator/" + washing.id + "'>",washing.name,"</a></h2>"].join('');
-                }
-                {% endif %}
+                placemark = new ymaps.Placemark([washing.geo[1], washing.geo[0]], {hintContent: ['<b>', washing.name, "</b><br/>", washing.address].join('')});
                 
-                timerange = washing.is_round_the_clock? 'Круглосуточно':[formatTime(washing.start_work_day)," — ",formatTime(washing.end_work_day)].join('');
-                time = '';
-                if (washing.is_enabled) {
-                    time = ["<p class='time'>",timerange,"</p>"].join('');
+                function closure() {
+                    var w = washing;
+                    handler = function(){ 
+                        selectedWashing = w;
+                        setupViewForWashing(); 
+                        $.mobile.changePage("#washing");
+                    };
+                    return handler;
                 }
 
-                mapView.geoObjects.add(
-                    new ymaps.Placemark(
-                        [washing.geo[1], washing.geo[0]], 
-                        {
-                            "washing_id": washing.id, 
-                            balloonContent: 
-                            [title,
-                            "<p class='description'>",washing.description,"</p>",
-                            "<p class='address'>",washing.address,"</p>",
-                            time,
-                            buttonsContent
-                            ].join(''),
-                            hintContent: ['<b>', washing.name, "</b><br/>", washing.address].join(''),
-                            iconContent: ""
-                        }, 
-                        { 
-                            balloonCloseButton: true
-                        }
-                        )
-                    );
-                var washing_id = washing.id;
+
+                placemark.events.add(["click"], closure());
+
+                mapView.geoObjects.add(placemark);
             }
         }
 
-/*
-        function retrieveDataForTimeGridByWashingIdAndToday(washingId, todayortomorrow) {
-            $.get('/washings/timegrid/' + washingId + '/bytoday/' + todayortomorrow, function(data){
-                updateTimeGridViewWithData(data);
-            });
+
+
+        function setupViewForWashing() {
+            washing = selectedWashing;
+            $("#selectedWashingName").html(washing.name);
+            $("#selectedWashingDescription").html(washing.description);
+            $("#selectedWashingAdress").html(washing.address);
+            if (!washing.is_enabled) {
+                $('#washingOrderCreating').hide();
+            } else {
+                $('#washingOrderCreating').show();
+            }
+
+            retrieveDataForTimeGridByWashingIdAndToday(washing);
         }
 
-        String.prototype.capitalize = function() {
-            return this.charAt(0).toUpperCase() + this.slice(1);
-        }
-*/
         function parseViewData(viewData) {
             var list = [];
             for (var i in viewData) {
@@ -181,8 +163,6 @@
         }
 
         function selectWashingsByTime() {
-            console.log("selectWashingsByTime");
-            console.log($('#timeSelectHours').val());
             if (!$('#timeSelectHours').val() || $('#timeSelectHours').val() == '-') {
                 viewModel = parseViewData(washings_data);
                 updateMapView();
@@ -210,7 +190,6 @@
         }
 
         function setupTimechoose() {
-            console.log('setupTimechoose');
             $('#chooseTimeWrapper').html('');
             $('#chooseTimeWrapper').append($('<select id="timeSelectHours" data-inline="true" ></select>'));
 
@@ -235,6 +214,45 @@
             
         }
 
+        function updateTimeGridViewWithData(dataObject) {
+            var data = dataObject.result;
+            $("#timegrid").html('');
+            $('#timegrid').append($('<fieldset id="timegridControls" data-role="controlgroup"></fieldset>'));
+
+            var id = 0;
+            for (i in data) {
+                id++;
+                var timegridItem = data[i];
+                var selectedClass = '';
+                if (timegridItem.time.split(':')[0] == orderModel.time[0] && timegridItem.time.split(':')[1] == orderModel.time[1] && timegridItem.available == 1) {
+                    selectedClass = 'selected';
+                }
+
+                if (timegridItem.timedout) {
+                    timegridItem.available = false;
+                    selectedClass = 'timedout';
+                }
+
+                if (timegridItem.available) {
+                    $("#timegridControls").append('<input type="radio" name="timegridselect" value="' + timegridItem.time + '" id="timegridselect-' + id + '" />');
+                    $("#timegridControls").append('<label for="timegridselect-' + id + '">' + timegridItem.time + '</label>');
+                }
+            }
+
+            $("#timegridControls").trigger("create");
+
+        }
+
+        function retrieveDataForTimeGridByWashingIdAndToday(washing) {
+            todayortomorrow = $('input[name=todayortomorrow]:checked').val();
+            $.get('/washings/timegrid/' + washing.id + '/bytoday/' + todayortomorrow, function(data){
+                updateTimeGridViewWithData(data);
+            });
+        }
+
+
+
+
         $(document).delegate("#chooseTime", "pageinit", function(){setupTimechoose();});
 
         // $(document).delegate("#index", "pageinit", function(){
@@ -253,7 +271,6 @@
 
         $(document).bind("pagechange", function( e, data ) {
                 var u = $.mobile.path.parseUrl( e.delegateTarget.URL );
-                console.log(data.options);
                 var listre = /^#list/;
                 var indexre = /^$/;
 
@@ -268,15 +285,16 @@
 
                     updateListView();
                 } else if ( u.hash.search(indexre) !== -1 ) {
-                    console.log("TRU");
                     // init();
-                } 
+                }  else if ( u.hash.search(washingre) !== -1 ) {
+                    
+
+                }
                 return false;            
             });
     </script>
 
     <style type="text/css">
-    body {min-height: 100%;}
     #bigmap {
         position: absolute;
         width: 100%;
@@ -320,10 +338,29 @@
 </div><!-- /page -->
 
 <div id="washing" data-role="page">
-    <div data-role="content" style="padding:0;">   
-        <img style="z-index:100; position:absolute; height:20px; margin-top:4px; margin-left: 4px;" src="{% static "img/logo.png" %}" />
-        <div id="washingMap"></div>
+    <div data-role="header" style="height:30px;">
+        <a data-role="button" data-rel="back" data-icon="back">Назад</a>
+    </div>
+    <div data-role="content">   
+        <h3 id="selectedWashingName">Автомойка «Тестовая»</h3>
+        <p id="selectedWashingDescription">Большое длинное текстовое описание тестовой автомойки</p>
+        <p id="selectedWashingAdress">Большой длинный адрес</p>
+        <!-- <p id="selectedWashingTime">с 11:00 до 22:00</p> -->
+        <div id="washingOrderCreating">
+            <hr />
+            <h3>Запись на мойку<h3>
+            <fieldset data-role="controlgroup" data-type="horizontal">
+                <input type="radio" name="todayortomorrow" id="radio-choice-1" value="0"  checked="checked" />
+                <label for="radio-choice-1">Сегодня</label>
+                <input type="radio" name="todayortomorrow" id="radio-choice-2" value="1"  />
+                <label for="radio-choice-2">Завтра</label>
+            </fieldset>
+            <h4>Выберите время</h4>
+            <div id="timegrid"></div>
 
+            <br/>            
+            <a href="#" data-role="button">Записаться на мойку!</a>
+        </div>
 
     </div><!-- /content -->
 </div>
@@ -336,16 +373,6 @@
         <ul id="washingsList" data-role="listview" data-inset="true" data-filter="true"></ul>
     </div>   
 </div>
-
-<div id="chooseTime" data-role="page">
-    <div data-role="content">
-        <label><b>Укажите желаемое время</b></label>
-        
-        
-
-    </div>
-</div>
-
 
 <div id="createOrder" data-role="page">
 </div>
