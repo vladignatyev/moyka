@@ -178,7 +178,34 @@
             return list;
         }
 
+        function updateListView() {
+            var list = $("#washingsList");
+            // list.listview();
+            for (var i in viewModel) {
+                var listElement = $("<li><a href='#washing-" + viewModel[i].id+ "'>" + viewModel[i].name + "</a></li>");
+                list.append(listElement);
+            }
+            $('#washingsList').listview('refresh');
+        }
+
         ymaps.ready(init);
+        $(document).ready(function(){
+            $(document).bind( "pagechange", function( e, data ) {
+                var u = $.mobile.path.parseUrl( e.delegateTarget.URL );
+                console.log(data.options);
+                var listre = /^#list/;
+                var washingre = /^#washing/;
+
+                if ( u.hash.search(listre) !== -1 ) {
+                    updateListView();
+
+                    // Make sure to tell changePage() we've handled this call so it doesn't
+                    // have to do anything.
+                    // e.preventDefault();
+                }
+            
+            });
+        });
     </script>
 
     <style type="text/css">
@@ -219,14 +246,34 @@
 
     </div><!-- /content -->
     <div data-role="footer">
-        <a href="#" data-role="button">Списком</a>
+        <a href="#list" data-role="button">Списком</a>
         <a href="#" data-role="button">По времени</a>
     </div>
 
 </div><!-- /page -->
-<!-- 
+
+<div id="selectedWashing" data-role="page" data-title="ТЕСТ АВТОМОЙКА">
+    <div data-role="content" class="map" style="padding:0;">   
+        <img style="z-index:100; position:absolute; height:20px; margin-top:4px; margin-left: 4px;" src="{% static "img/logo.png" %}" />
+        <div id="washingMap"></div>
+
+
+    </div><!-- /content -->
+</div>
+
 <div id="list" data-role="page">
-</div> -->
+    <div data-role="content">
+        <ul id="washingsList" data-role="listview" data-inset="true" data-filter="true"></ul>
+    </div>   
+</div>
+
+<div id="chooseTime" data-role="page">
+</div>
+
+
+<div id="createOrder" data-role="page">
+</div>
+
 
 {% csrf_token %}
 

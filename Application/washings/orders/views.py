@@ -38,7 +38,7 @@ def index(request):
 		site_settings = SiteSettings()
 		site_settings.save()
 
-	templateHtml = 'index.html'
+	templateHtml = 'mobile.html'
 	if 'Mobile' in request.META['HTTP_USER_AGENT']:
 		templateHtml = 'mobile.html'
 	return render_to_response(templateHtml, 
