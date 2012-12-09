@@ -16,5 +16,8 @@ urlpatterns = patterns('',
     url(r'^partners/', 'orders.views.login_view', name='login'),
     url(r'^logout/', 'orders.views.logout_view'),
     url(r'^washings/', include('orders.urls')),
+
+    url(r'^nomobile/', 'orders.views.nomobile'),
+    url(r'^mobile/', 'orders.views.mobile'),
     url(r'^$', 'orders.views.index'),
 )

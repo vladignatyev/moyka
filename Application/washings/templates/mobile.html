@@ -45,22 +45,24 @@
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 };
 
-                $.post('/washings/orders/add/', postData, function(data, status){
-                    if (status == 'success') {
-                        if (data.result) {
-                            if (data.result.error) {
-                                
-                                errorCallback(data.result.error, data);
+                try{
+                    $.post('/washings/orders/add/', postData, function(data, status){
+                        if (status == 'success') {
+                            if (data.result) {
+                                if (data.result.error) {
+                                    errorCallback(data.result.error, data);
+                                }
+                                if (data.result.new_order) {
+                                    successCallback(data.result.new_order, data);
+                                }
                             }
-                            if (data.result.new_order) {
-                                successCallback(data.result.new_order, data);
-                            }
+                        } else {
+                            errorCallback('senderror', null);
                         }
-                    } else {
-                        
-                        errorCallback('senderror', null);
-                    }
-                });
+                    });
+                } catch(e) {
+                    errorCallback('exception', null);
+                }
             }
 
             this.clear();
@@ -70,7 +72,6 @@
         var viewModel;
         var mapView;
         var orderModel = new OrderModel();
-
 
         function normalize10(t) {
             if (t < 10) return '0'+t;
@@ -119,14 +120,10 @@
                     return handler;
                 }
 
-
                 placemark.events.add(["click"], closure());
-
                 mapView.geoObjects.add(placemark);
             }
         }
-
-
 
         function setupViewForWashing() {
             washing = selectedWashing;
@@ -181,7 +178,6 @@
             }
         }
 
-
         function updateListView() {
             var list = $("#washingsList");
             list.html('');
@@ -215,7 +211,6 @@
 
             $('#timeSelectHours').selectmenu();
             $('#timeSelectHours').live('change', function(){selectWashingsByTime();});
-            
         }
 
         function updateTimeGridViewWithData(dataObject) {
@@ -255,13 +250,52 @@
         }
 
 
-
-
         $(document).delegate("#chooseTime", "pageinit", function(){setupTimechoose();});
+        $(document).delegate("#createOrderButton", "click", function(){
+            time = $('input[name=timegridselect]:checked').val();
+            if (!time) {
+                alert('Чтобы записаться выберите время!');
+                return;
+            }
 
-        // $(document).delegate("#index", "pageinit", function(){
-            
-        // });
+            orderModel.washingId = selectedWashing.id;
+            orderModel.time = time.split(':');
+            orderModel.tomorrow = $('input[name=todayortomorrow]:checked').val();
+            $.mobile.changePage("#createOrder");
+        });
+        $(document).delegate("#commitOrderButton", "click", function(){
+            orderModel.fio = $('#fio').val();
+            orderModel.phone = $('#phone').val();
+            orderModel.carno = $('#carno').val();
+            orderModel.email = $('#email').val();
+                        
+            var success = function(order, data){
+                markup = ['<p>', 'Автомойка «', selectedWashing.name, '» по адресу «', selectedWashing.address, '» на ', 
+                                orderModel.tomorrow.toString() == '1'?'завтра ' : 'сегодня в&nbsp;', orderModel.formatTime(), 
+                                ' для автомобиля с госномером ', orderModel.carno ,'</p>',
+                                '<p style="font-weight:bolder;">Не опаздывайте к назначенному времени!</p>'].join('');
+                $.mobile.changePage("#orderCreated");
+
+                $("#newOrderDetails").html('');
+                $("#newOrderDetails").append($(markup));
+                
+            };
+
+            var error = function (error, data){
+                if (error == "senderror" || error == "exception") {
+                    alert("При регистрации заказа возникла ошибка! Пожалуйста, повторите попытку!");
+                } else {
+                    alert("Ой-ой! Видимо кто-то другой уже оформил заказ на ваше время! Пожалуйста, повторите попытку!");
+                    $.mobile.changePage("#washing");
+                }
+                $.mobile.changePage("#createOrder");
+            };
+
+            orderModel.addOrder(success, error);
+        });
+        
+
+
 
         $(document).ready(function(){
             ymaps.ready(function(){
@@ -270,9 +304,7 @@
                 init();
                 setupTimechoose();
             });
-            
         });
-
         $(document).bind("pagechange", function( e, data ) {
                 var u = $.mobile.path.parseUrl( e.delegateTarget.URL );
                 var listre = /^#list/;
@@ -346,9 +378,9 @@
         <a data-role="button" data-rel="back" data-icon="back">Назад</a>
     </div>
     <div data-role="content">   
-        <h3 id="selectedWashingName">Автомойка «Тестовая»</h3>
-        <p id="selectedWashingDescription">Большое длинное текстовое описание тестовой автомойки</p>
-        <p id="selectedWashingAdress">Большой длинный адрес</p>
+        <h3 id="selectedWashingName"></h3>
+        <p id="selectedWashingDescription"></p>
+        <p id="selectedWashingAdress"></p>
         <!-- <p id="selectedWashingTime">с 11:00 до 22:00</p> -->
         <div id="washingOrderCreating">
             <hr />
@@ -363,7 +395,7 @@
             <div id="timegrid"></div>
 
             <br/>            
-            <a href="#" data-role="button">Записаться на мойку!</a>
+            <a id="createOrderButton" data-role="button">Записаться на мойку!</a>
         </div>
 
     </div><!-- /content -->
@@ -379,10 +411,37 @@
 </div>
 
 <div id="createOrder" data-role="page">
+    <div data-role="header" style="height:30px;">
+        <a data-role="button" data-rel="back" data-icon="back">Назад</a>
+    </div>
+    <div data-role="content">
+        <form>
+            {% csrf_token %}
+            <label for="fio">Ваше имя</label>
+            <input type="text" required="required" id="fio" />
+            <label for="phone">Телефон для связи</label>
+            <input type="text" required="required" id="phone" />
+            <label for="carno">Номер автомобиля</label>
+            <input type="text" required="required" id="carno" />
+            <label for="email">Электронная почта (необязательно)</label>
+            <input type="text" id="email" />
+        </form>
+        <br/>            
+        <a id="commitOrderButton" data-role="button">Создать заказ!</a>
+    </div>
 </div>
 
+<div id="orderCreated" data-role="page">
+    <div data-role="header" style="height:30px;">
+        <a data-role="button" href="/" data-icon="back">Начало</a>
+    </div>
 
-{% csrf_token %}
+    <div data-role="content">
+        <h4>Заказ успешно оформлен!</h4>
+        <p id="newOrderDetails"></p>
+    </div>
+
+</div>
 
 </body>
 </html>

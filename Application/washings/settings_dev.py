@@ -145,4 +145,7 @@ LOGGING = {
         },
     }
 }
+
 AUTH_PROFILE_MODULE = 'orders.UserProfile'
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'

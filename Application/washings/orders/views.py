@@ -25,6 +25,14 @@ def _timeobj_from_request_string(string):
 	hours, minutes = string.split(':')
 	return time(hour=int(hours), minute=int(minutes))
 
+def nomobile(request):
+	request.session['mobile'] = 0
+	return redirect('/')
+
+def mobile(request):
+	request.session['mobile'] = 1
+	return redirect('/')
+
 @csrf_protect
 def index(request):
 	profile = None
@@ -38,8 +46,9 @@ def index(request):
 		site_settings = SiteSettings()
 		site_settings.save()
 
-	templateHtml = 'mobile.html'
-	if 'Mobile' in request.META['HTTP_USER_AGENT']:
+	if not request.session.get('mobile'):
+		templateHtml = 'index.html'
+	elif 'Mobile' in request.META['HTTP_USER_AGENT'] or request.session.get('mobile') == 1:
 		templateHtml = 'mobile.html'
 	return render_to_response(templateHtml, 
 		{'profile': profile, 'site_settings': site_settings, 'now': datetime.now(), 
