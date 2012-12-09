@@ -139,6 +139,10 @@
                 $('#washingOrderCreating').show();
             }
 
+            $('input[name=todayortomorrow]').bind('change', function(){
+                retrieveDataForTimeGridByWashingIdAndToday(washing);                
+            });
+
             retrieveDataForTimeGridByWashingIdAndToday(washing);
         }
 
