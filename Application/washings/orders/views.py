@@ -48,7 +48,7 @@ def index(request):
 
 
 	templateHtml = 'index.html'
-	if 'Mobile' in request.META['HTTP_USER_AGENT'] or request.session.get('mobile') == 1:
+	if ('Mobile' in request.META['HTTP_USER_AGENT'] or request.session.get('mobile') == 1) and not request.session.get('mobile') == 0:
 		templateHtml = 'mobile.html'
 		if not request.session.get('mobile'):
 			request.session['mobile'] = 1
@@ -165,7 +165,7 @@ def add_order(request, default_method='POST'):
 		except ValueError:
 			print u"unable to find such washing: %s" % pk
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'unabletofind'}) # unable to find
 
 		try:
 			unique_order_test = Order.objects.filter(csrfmiddlewaretoken=request.REQUEST['csrfmiddlewaretoken'])
@@ -178,13 +178,13 @@ def add_order(request, default_method='POST'):
 		except:
 			print u"Already created!"
 			transaction.rollback()
-			raise Http404	
+			return orders.JSONResponse({'error': 'alreadycreated', 'details':unique_order_test[0].id})
 
 
 		if not re.match(r'^\d\d:\d\d$', request.REQUEST['date_time']):
 			print "malware time"
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'malware'})
 
 		today = date.today() 
 
@@ -192,7 +192,7 @@ def add_order(request, default_method='POST'):
 		if today_or_tommorow is None:
 			print "today_or_tommorow is None"
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'todayortommorow'})
 
 		print today_or_tommorow
 
@@ -224,12 +224,12 @@ def add_order(request, default_method='POST'):
 		if order_time < datetime.now():
 			print "time has expired"
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'badtime'})
 
 		if not timegrid.match(t_obj):
 			print "time doesn't match timegrid"
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'badtime'})
 
 		# todo выбираем просто заказы и подсчитываем колиество заказов на данное время, если равно washing_post_number — время занято
 		# test if time has already occupied
@@ -249,7 +249,6 @@ def add_order(request, default_method='POST'):
 
 		occupied_orders = Order.objects.raw(query, [washing.id, date_time_str])
 		if len(list(occupied_orders)) == washing.washing_posts_count:
-			print "OCUPIED HERE"
 			transaction.rollback()
 			return orders.JSONResponse({'error': 'tryanothertime'}) # occupied :(
 
@@ -271,7 +270,7 @@ def add_order(request, default_method='POST'):
 			print "provided form fields wasn't valid"
 			print f.errors
 			transaction.rollback()
-			raise Http404
+			return orders.JSONResponse({'error': 'forminvalid'})
 		new_order = f.save(commit=False)
 
 		post_number_query = """
@@ -301,8 +300,6 @@ def add_order(request, default_method='POST'):
 			for order_by_time in orders_by_time: 
 				occupied_posts[order_by_time.washing_post_number - 1] = True
 
-			print occupied_posts
-
 			washing_post_number_for_order = None
 			
 			for i in range(0, len(occupied_posts)):
@@ -321,7 +318,7 @@ def add_order(request, default_method='POST'):
 		return orders.JSONResponse({'new_order': new_order.id})
 	else:
 		transaction.rollback()
-		raise Http404
+		return orders.JSONResponse({'error': 'unknown'})
 
 # todo: add csrf_protect (see admin.html)
 @login_required

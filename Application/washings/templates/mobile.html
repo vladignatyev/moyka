@@ -53,24 +53,24 @@
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 };
 
-                try{
-                    $.post('/washings/orders/add/', postData, function(data, status){
-                        if (status == 'success') {
-                            if (data.result) {
-                                if (data.result.error) {
-                                    errorCallback(data.result.error, data);
-                                }
-                                if (data.result.new_order) {
-                                    successCallback(data.result.new_order, data);
-                                }
+                $(document).ajaxError(function(){errorCallback('exception', null);});
+
+                $.post('/washings/orders/add/', postData, function(data, status){
+                    if (status == 'success') {
+                        if (data.result) {
+                            if (data.result.error) {
+                                console.log('error: ' + data.result.error);
+                                errorCallback(data.result.error, data);
                             }
-                        } else {
-                            errorCallback('senderror', null);
+                            if (data.result.new_order) {
+                                successCallback(data.result.new_order, data);
+                            }
                         }
-                    });
-                } catch(e) {
-                    errorCallback('exception', null);
-                }
+                    } else {
+                        console.log('senderror: ' + data);
+                        errorCallback('senderror', null);
+                    }
+                });
             }
 
             this.clear();
@@ -99,6 +99,7 @@
 
             selectWashingsByTime();
             updateMapView();
+            initialized = true;
         }
 
         function formatTime(time) {
@@ -285,14 +286,15 @@
             $.mobile.changePage("#createOrder");
         });
         $(document).delegate("#commitOrderButton", "click", function(){
+            console.log(666);
             orderModel.fio = $('#fio').val();
             orderModel.phone = $('#phone').val();
             orderModel.carno = $('#carno').val();
             orderModel.email = $('#email').val();
 
             console.log(orderModel);
-                        
-            var success = function(order, data){
+
+            orderModel.addOrder(function(order, data){
                 markup = ['<p>', 'Автомойка «', selectedWashing.name, '» по адресу «', selectedWashing.address, '» на ', 
                                 orderModel.tomorrow.toString() == '1'?'завтра ' : 'сегодня в&nbsp;', orderModel.formatTime(), 
                                 ' для автомобиля с госномером ', orderModel.carno ,'</p>',
@@ -302,19 +304,20 @@
                 $("#newOrderDetails").html('');
                 $("#newOrderDetails").append($(markup));
                 
-            };
-
-            var error = function (error, data){
+            }, function (error, data){
+                console.log(3);
                 if (error == "senderror" || error == "exception") {
                     alert("При регистрации заказа возникла ошибка! Пожалуйста, повторите попытку!");
-                } else {
+                } 
+                else if (error == "forminvalid") {
+                    alert("Проверьте что правильно ввели e-mail и номер телефона, а также заполнили остальные поля!");
+                }
+                else {
                     alert("Ой-ой! Видимо кто-то другой уже оформил заказ на ваше время! Пожалуйста, повторите попытку!");
                     $.mobile.changePage("#washing");
                 }
                 $.mobile.changePage("#createOrder");
-            };
-
-            orderModel.addOrder(success, error);
+            });
         });
         
 
@@ -346,7 +349,7 @@
 
                     updateListView();
                 } else if ( u.hash.search(indexre) !== -1 ) {
-                    // init();
+                    if  (initialized) init();
                 }  else if ( u.hash.search(washingre) !== -1 ) {
                     
 

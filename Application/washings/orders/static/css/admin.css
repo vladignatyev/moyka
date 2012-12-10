@@ -106,7 +106,8 @@ li:hover .submenu {
 #ordersEditor .orders .c, #ordersEditor .orders .cc  {
     width: 100px;
     height: 25px;
-    display: inline-table;
+    overflow: hidden;
+    display: block;
     float:left;
     background: #f8f9fb;
     border-right: 1px solid #f8f9fb;
