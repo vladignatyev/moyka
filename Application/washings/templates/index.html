@@ -9,6 +9,7 @@
     <meta name="description" content=""/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <meta name="verify-reformal" content="178f90ad542daa47deaf9ede" />
+    <meta name='yandex-verification' content='7a4e624524fef7e1' />
 
     <script type="text/javascript" src="{% static "js/jquery.min.js" %}"></script>
     
@@ -495,11 +496,17 @@
                 {% if site_settings.show_email %}
                 <a href="mailto:{{ site_settings.contact_email }}" class="mail">{{ site_settings.contact_email }}</a>
                 {% endif %}
-                <a href="/mobile/" class="mail">Мобильная версия</a>
             </div>
             <div class="copyright">
-                Мойка инфо<br/>
-                &copy; 2012
+                <table>
+                    <tr>
+                    <td>Мойка инфо<br/>
+                        &copy; 2012
+                    </td>
+                    <td style="vertical-align:top; padding-left:20px; padding-top:5px;"><a href="/mobile/">Мобильная версия</a></td>
+                    </tr>
+                </table>
+
             </div>
         </div>
     </div>
